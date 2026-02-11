@@ -49,7 +49,8 @@ int main()
 
 	//load shaders
 	ResourceManager::loadShader("vertShader.vert", "fragShader.frag", nullptr, "shader");
-	glm::mat4 projection = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f, -1.0f, 1.0f);
+	
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), static_cast<float>(SCR_HEIGHT), 0.0f, -1.0f, 1.0f);
 	ResourceManager::getShader("shader").use().setMat4("projection", projection);
 	Renderer* renderer = new Renderer(
 		ResourceManager::getShader("shader")
@@ -134,5 +135,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	SCR_HEIGHT = height;
 	ENGINE.WIDTH = SCR_WIDTH;
 	ENGINE.HEIGHT = SCR_HEIGHT;
+	// also update the orthographic projection
+	glm::mat4 newProj = glm::ortho(0.0f, static_cast<float>(width), static_cast<float>(height), 0.0f, -1.0f, 1.0f);
+	ResourceManager::getShader("shader").use().setMat4("projection", newProj);
 }
 
