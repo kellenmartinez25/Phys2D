@@ -1,10 +1,10 @@
 #pragma once
 
 #include "PhysObject.h"
+#include "PhysTypes.h"
 #include <glm/glm.hpp>
 #include <vector>
 typedef glm::dvec2 Axis;
-typedef std::vector<glm::dvec2> ClippedPoints;
 typedef std::vector<glm::dvec2> Vec2DCollection;
 
 struct Projection {
@@ -31,7 +31,6 @@ struct MTV {
 MTV* getMTV(PhysObject& obj1, PhysObject& obj2);
 std::vector<Axis> getAxes(std::vector<glm::dvec2>& objVertices);
 bool isColliding(PhysObject& obj1, PhysObject& obj2);
-ClippedPoints* getClippedPoints(PhysObject& obj1, PhysObject& obj2);
-ClippedPoints* getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm);
+bool genManifold(PhysObject& obj1, PhysObject& obj2, Manifold& out);
 
 Edge bestEdge(const PhysObject& obj1, const Axis& sepNormal);

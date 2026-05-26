@@ -43,23 +43,18 @@ void Engine::updateSim(double dt)
 			if (isColliding(obj, obj2)) {
 
 				//std::cout << "Collision!" << std::endl;
-				MTV* mt = getMTV(obj, obj2);
-				glm::dvec2 sepNorm = obj2.center() - obj.center();
-				double isPointingRight = glm::dot(sepNorm, mt->smallest) / glm::length(sepNorm);
-				if (isPointingRight < 0.0)
-					mt->smallest *= -1.0;
-				Edge e1 = bestEdge(obj, mt->smallest);
-				Edge e2 = bestEdge(obj2, -mt->smallest);
-				ClippedPoints* cp = getClippedPoints(e1, e2, mt->smallest);
+
+				Manifold manifold;
+				manifold.count = 0;
+				bool contactSuccess = genManifold(obj, obj2, manifold);
 				
 
 
 
-				collide2D(obj, obj2, cp, mt->smallest);
+				collide2D(obj, obj2, manifold);
 				// get them out of each other
-				obj.pos = obj.pos - (mt->overlap - .01 > 0 ? mt->overlap - .01 : 0) * .2 * mt->smallest;
-				delete cp;
-				delete mt;
+				//obj.pos = obj.pos - (mt->overlap - .01 > 0 ? mt->overlap - .01 : 0) * .2 * mt->smallest;
+				//delete mt;
 
 			}
 		}

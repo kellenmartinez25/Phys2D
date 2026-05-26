@@ -2,6 +2,9 @@
 #include "MathUtils.h"
 #include <limits>
 
+typedef std::vector<glm::dvec2> Vec2DCollection;
+
+
 // Apply a projection from a collection of vertices onto an axis
 Projection::Projection(Vec2DCollection vertices, Axis axis) {
 	min = glm::dot(axis, vertices[0]);
@@ -124,8 +127,8 @@ Edge bestEdge(const PhysObject& obj1, const Axis& sepNormal) {
 }
 
 // clip 2 points
-ClippedPoints* clip(glm::dvec2 v1, glm::dvec2 v2, glm::dvec2 n, double o) {
-	ClippedPoints* cp = new ClippedPoints();
+Vec2DCollection* clip(glm::dvec2 v1, glm::dvec2 v2, glm::dvec2 n, double o) {
+	Vec2DCollection* cp = new Vec2DCollection();
 	double d1 = glm::dot(n, v1) - o;
 	double d2 = glm::dot(n, v2) - o;
 
@@ -142,16 +145,12 @@ ClippedPoints* clip(glm::dvec2 v1, glm::dvec2 v2, glm::dvec2 n, double o) {
 	}
 	return cp;
 }
-// Generate a contact manifold
-ClippedPoints* getClippedPoints(PhysObject& obj1, PhysObject& obj2) {
-	MTV* mtv = getMTV(obj1, obj2);
-	Edge e1 = bestEdge(obj1, -mtv->smallest);
-	Edge e2 = bestEdge(obj2, mtv->smallest);
-	return getClippedPoints(e1, e2, -mtv->smallest);
-}
+
+
+
 // Generate a contact manifold between two edges and an MTV.
-// May contain 1-2 points. Returns NULL on error.
-ClippedPoints* getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm) {
+// May contain 0-2 points.
+bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 	// helper vectors for easier readibility
 	glm::dvec2 e10 = e1.end - e1.start;
 	glm::dvec2 e20 = e2.end - e2.start;
@@ -173,17 +172,22 @@ ClippedPoints* getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm) {
 
 	double o1 = glm::dot(refv, ref.start);
 	// clip the inc edge by the first vertex of the ref edge
-	ClippedPoints* cp = clip(inc.start, inc.end, refv, o1);
+
+	Vec2DCollection* cp = clip(inc.start, inc.end, refv, o1);
 	// if the clipping didnt result in 2 points, we have failed to generate our points
 	if (cp->size() < 2) {
-		return NULL;
+		out.count = 0;
+		return false;
 	}
 	// next, clip the remaining inc edge by the 2nd vertex of the ref edge
 	// since we're clipping in the opposite direction we flip the direction and offset
 	double o2 = glm::dot(refv, ref.end);
 	cp = clip(cp->at(0), cp->at(1), -refv, -o2);
 	// also fail if not 2 points left
-	if (cp->size() < 2) return NULL;
+	if (cp->size() < 2) {
+		out.count = 0;
+		return false;
+	}
 
 	// last clip: clip along the reference into the refNorm
 	// get the normal of the reference edge
@@ -194,6 +198,8 @@ ClippedPoints* getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm) {
 	// get the largest depth our reference edge penetrates
 	double max = glm::dot(refNorm, ref.max);
 	bool erasedLast = false;
+
+
 	// finally, we remove any points that are not past this maximum depth
 	if (glm::dot(refNorm, cp->at(1)) - max < 0.0) {
 		cp->pop_back();
@@ -202,5 +208,29 @@ ClippedPoints* getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm) {
 	if (glm::dot(refNorm, cp->at(0)) - max < 0.0) {
 		cp->erase(cp->begin());
 	}
-	return cp;
+	// build manifold
+	out.normal = refNorm;
+	for (auto v : *cp) {
+		// the point we're working on
+		ContactPoint& pt = out.points[out.count];
+		out.points[out.count].pos = v;
+		pt.penetration =  glm::dot(refNorm, v) - glm::dot(refNorm, ref.start);
+		out.count++;
+	}
+
+
+	return true;
+}
+// Populate a contact manifold with points between obj1 and obj2.
+bool genManifold(PhysObject& obj1, PhysObject& obj2, Manifold& out) {
+	MTV* mtv = getMTV(obj1, obj2);
+	glm::dvec2 sepNorm = obj2.center() - obj1.center();
+	double isPointingRight = glm::dot(sepNorm, mtv->smallest) / glm::length(sepNorm);
+	if (glm::dot(obj1.center() - obj2.center(), mtv->smallest) < 0.0)
+		mtv->smallest *= -1.0;
+	
+	Edge e1 = bestEdge(obj1, -mtv->smallest);
+	Edge e2 = bestEdge(obj2, mtv->smallest);
+	
+	return getClippedPoints(e1, e2, mtv->smallest, out);
 }
