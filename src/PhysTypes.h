@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <vector>
-
+#include "PhysObject.h"
 // Represents a contact point between two objects
 struct ContactPoint {
 	// pos in world space
@@ -23,10 +23,15 @@ public:
 	// Normal of the reference face on the collision.
 	glm::dvec2 normal;
 	ContactPoint points[2];
-	int count;
+	int count = 0;
+
+	PhysObject* A;
+	PhysObject* B;
 	// Adds a new vector to the Manifold
 	// Behaves the same as std::vector.push_back()
 	// Returns whether v was successfully added.
 	bool add(glm::dvec2 v);
+
 	glm::dvec2 get(int index);
+
 };

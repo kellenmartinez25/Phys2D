@@ -23,5 +23,6 @@ public:
 	void addObject(PhysObject* obj);
 	void updateSim(double dt);
 	std::vector<PhysObject> objects;
-
+private:
+	void pushIntoScreenBounds(PhysObject& obj);
 };

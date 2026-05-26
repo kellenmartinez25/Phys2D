@@ -19,8 +19,11 @@ void collide2D(PhysObject& objA, PhysObject& objB, Manifold& manifold) {
 	glm::dvec2 collisionPoint;
 	if (manifold.count == 2)
 		collisionPoint = (manifold.get(0) + manifold.get(1)) / 2.0;
+	else if (manifold.count == 0)
+		return;
 	else
 		collisionPoint = manifold.get(0);
+
 
 	DebugDraw::get().drawPoint(collisionPoint, glm::vec3(1.0f, 0.0f, 0.0f));
 

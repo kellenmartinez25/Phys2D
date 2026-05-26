@@ -223,7 +223,15 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 }
 // Populate a contact manifold with points between obj1 and obj2.
 bool genManifold(PhysObject& obj1, PhysObject& obj2, Manifold& out) {
+	// set the A and B objects
+	out.A = &obj1;
+	out.B = &obj2;
+
 	MTV* mtv = getMTV(obj1, obj2);
+	if (mtv == NULL) {
+		out.count = 0;
+		return false;
+	}
 	glm::dvec2 sepNorm = obj2.center() - obj1.center();
 	double isPointingRight = glm::dot(sepNorm, mtv->smallest) / glm::length(sepNorm);
 	if (glm::dot(obj1.center() - obj2.center(), mtv->smallest) < 0.0)
