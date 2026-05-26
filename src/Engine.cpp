@@ -1,7 +1,7 @@
 #include "Engine.h"
 #include "Collision.h"
 #include "Dynamics.h"
-
+#include "DebugTools.h"
 #include <vector>
 #include <utility>
 
@@ -28,6 +28,8 @@ void Engine::addObject(PhysObject* obj)
 {
 	objects.push_back(*obj);
 }
+
+// make sure an object doesnt go off screen bounds
 void Engine::pushIntoScreenBounds(PhysObject& obj) {
 	// also keep within screen boundaries
 	if (obj.pos.y + obj.size.y > HEIGHT) {
@@ -47,6 +49,7 @@ void Engine::pushIntoScreenBounds(PhysObject& obj) {
 		obj.velocity.x *= -1.0f;
 	}
 }
+
 // update positions and velocities
 void Engine::updateSim(double dt) {
 	// Iterate through each object
@@ -70,9 +73,14 @@ void Engine::updateSim(double dt) {
 	}
 
 	for (auto& m : manifolds) {
+		
 		// collide on each manifold
-		collide2D(*m.A, *m.B, m);
+		if (m.count == 0) continue;
+		for (int i = 0; i < m.count; i++) {
+			DebugDraw::get().drawPoint(m.get(i), glm::vec3(1.0f, 0.0f, 0.0f));
+		}
 
+		collide2D(*m.A, *m.B, m);
 	}
 	// update each object with new values
 	for (auto& obj : objects) {
@@ -80,39 +88,5 @@ void Engine::updateSim(double dt) {
 		pushIntoScreenBounds(obj);
 		obj.render(renderer);
 	}
-	//for (int i = 0; i < objects.size(); i++) {
-	//	PhysObject& obj = objects[i]; // the one we're working with
-
-	//	// Iterate against everything else
-	//	for (int j = i + 1; j < objects.size(); j++) {
-	//		if (j == i) continue;	// dont check the same one
-	//		PhysObject& obj2 = objects[j];
-	//		// if they're colliding and if it hasn't already been checked
-
-	//		if (isColliding(obj, obj2)) {
-
-	//			//std::cout << "Collision!" << std::endl;
-
-	//			Manifold manifold;
-	//			manifold.count = 0;
-	//			bool contactSuccess = genManifold(obj, obj2, manifold);
-	//			
-
-
-
-	//			collide2D(obj, obj2, manifold);
-	//			// get them out of each other
-	//			//obj.pos = obj.pos - (mt->overlap - .01 > 0 ? mt->overlap - .01 : 0) * .2 * mt->smallest;
-	//			//delete mt;
-
-	//		}
-	//	}
-
-
-
-		//// update object pos/angle
-		//obj.update(dt);
-		//// render to display
-		//obj.render(renderer);
 	
 }

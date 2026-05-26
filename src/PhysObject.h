@@ -24,6 +24,10 @@ public:
 	glm::dvec2 force;
 	/// Mass of entire object.
 	double mass;
+	/// 1 / mass
+	double invMass;
+	/// 1 / I; used for dynamics calculations.
+	double invInertia;
 	/// Whether this object can be moved.
 	bool isStatic = false;
 
@@ -40,7 +44,9 @@ public:
 	glm::dvec2 center() {
 		return glm::dvec2(pos.x + 0.5f * size.x, pos.y + 0.5f * size.y);
 	}
-
+private:
+	// set the inverse mass / inertia
+	void calcInverses();
 };
 
 class Box2D : public PhysObject {

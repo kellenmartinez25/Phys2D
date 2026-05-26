@@ -12,6 +12,7 @@ PhysObject::PhysObject() :
 	force(0.0f),
 	mass(1.0f)
 {
+	calcInverses();
 }
 // create new physobject
 PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, glm::dvec2 velocity, glm::vec3 color) :
@@ -22,8 +23,8 @@ PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, glm::dvec2 velocity, glm
 	color(color),
 	mass(1.0f),
 	force(0.0f)
-
 {
+	calcInverses();
 }
 
 PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double mass, double rotation, glm::dvec2 velocity) :
@@ -35,14 +36,26 @@ PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double mass, double rota
 	mass(mass),
 	force(0.0f)
 {
+	calcInverses();
 }
 
 PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double rotation, bool isStatic) :
 	PhysObject(pos, size, std::numeric_limits<double>::max(), rotation)
 {
 	this->isStatic = isStatic;
+	calcInverses();
 }
 
+// set the inverse mass / inertia
+void PhysObject::calcInverses() {
+	// did you know? 1 / inf = 0
+	// we instead calculate the inverse inertia and mass, for dealing with static objects
+	// static objects will have an infinite mass, meaning they will have an inverse mass/inertia of exactly 0.0
+	// I^-1 = 12 / (m * (w^2 + h^2))
+	invInertia = (isStatic) ? 0.0 : (12.0) / (mass * (size.x * size.x + size.y * size.y));
+	// same here
+	invMass = (isStatic) ? 0.0 : 1 / mass;
+}
 // used if we want to init the object but provide the details later
 void PhysObject::init(glm::dvec2 pos, glm::dvec2 size, glm::dvec2 velocity, glm::vec3 color) {
 	this->pos = pos;

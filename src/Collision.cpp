@@ -240,5 +240,13 @@ bool genManifold(PhysObject& obj1, PhysObject& obj2, Manifold& out) {
 	Edge e1 = bestEdge(obj1, -mtv->smallest);
 	Edge e2 = bestEdge(obj2, mtv->smallest);
 	
-	return getClippedPoints(e1, e2, mtv->smallest, out);
+	bool state = getClippedPoints(e1, e2, mtv->smallest, out);
+
+	// update collision point parameters
+	for (auto& cp : out.points) {
+		cp.rA = cp.pos - obj1.center();
+		cp.rB = cp.pos - obj2.center();
+	}
+
+	return state;
 }

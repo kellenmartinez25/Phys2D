@@ -3,5 +3,5 @@
 #include "PhysObject.h"
 #include "PhysTypes.h"
 void applyForce(PhysObject& obj, glm::dvec2 force, glm::dvec2 fPos, double dt);
-
+void applyImpulse(PhysObject& A, PhysObject& B, ContactPoint point, const glm::dvec2 J);
 void collide2D(PhysObject& objA, PhysObject& objB, Manifold& manifold);

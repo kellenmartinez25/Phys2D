@@ -89,11 +89,11 @@ int main()
 
 	ENGINE.addObject(
 		new PhysObject(
-			glm::dvec2(200.0, 200.0),
+			glm::dvec2(500.0, 250.0),
 			glm::dvec2(100.0, 100.0),
 			1.0f,
 			30.0f,
-			glm::dvec2(300.0, 100.0)
+			glm::dvec2(-300.0, 100.0)
 		)
 	);
 	ENGINE.addObject(
@@ -113,7 +113,7 @@ int main()
 			true)
 	};
 	for (PhysObject& obj : borders) {
-		//ENGINE.addObject(&obj);
+		ENGINE.addObject(&obj);
 	}
 	//for (int i = 0; i < nBoxes; i++) {
 	//	// random x/y things
