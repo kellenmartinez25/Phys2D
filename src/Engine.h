@@ -10,15 +10,6 @@
 #include "Renderer.h"
 
 class Engine {
-private:
-	void collide(PhysObject& obj1, PhysObject& obj2);
-	enum Direction {
-		UP,
-		RIGHT,
-		DOWN,
-		LEFT
-	};
-	Direction getBestSideClipMatching(PhysObject& obj1, PhysObject& obj2);
 public:
 	GLFWwindow* window;
 	int WIDTH;
@@ -26,14 +17,11 @@ public:
 	float view_x;
 	float view_y;
 	Renderer* renderer;
-
+	glm::dvec2 gravityField = glm::dvec2(0.0f, 10.0f);
 	Engine(GLFWwindow* win, Renderer* renderer);
 	Engine();
 	void addObject(PhysObject* obj);
-	int checkCollision(PhysObject& obj1, PhysObject& obj2);
-	void updateSim(float dt);
+	void updateSim(double dt);
 	std::vector<PhysObject> objects;
-	void resetCollisionCheckFlags();
-	void clipBoxes(PhysObject& obj1, PhysObject& obj2, Direction normDir);
 
 };

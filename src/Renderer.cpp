@@ -49,7 +49,7 @@ void Renderer::initRenderData()
 
 }
 // draw sprite to screen using a provided texture
-void Renderer::drawSprite(Texture2D& texture, glm::vec2 pos, glm::vec2 size, float rotate, glm::vec3 color)
+void Renderer::drawSprite(Texture2D& texture, glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color)
 {
 	// activate shader
 	this->shader.use();
@@ -78,7 +78,7 @@ void Renderer::drawSprite(Texture2D& texture, glm::vec2 pos, glm::vec2 size, flo
 	//glBindVertexArray(0);
 }
 // Draw a solid color rectangle
-void Renderer::drawSprite(glm::vec2 pos, glm::vec2 size, float rotate, glm::vec3 color)
+void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color)
 {
 	drawSprite(BLANK_WHITE.value(), pos, size, rotate, color);
 }

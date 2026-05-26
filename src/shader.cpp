@@ -57,8 +57,8 @@ void Shader::setFloat(const char* name, GLfloat value)
 {
 	glUniform1f(getLocation(name), value);
 }
-// set uniform vec2 from glm::vec2
-void Shader::setVec2f(const char* name, glm::vec2& vec2)
+// set uniform vec2 from glm::dvec2
+void Shader::setVec2f(const char* name, glm::dvec2& vec2)
 {
 	glUniform2f(getLocation(name), vec2.x, vec2.y);
 }

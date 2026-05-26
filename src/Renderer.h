@@ -21,8 +21,8 @@ public:
 	* @param color RGB color value of the texture
 	*/
 	void drawSprite(Texture2D& texture,
-		glm::vec2 pos,
-		glm::vec2 size = glm::vec2(10.0f, 10.0f),
+		glm::dvec2 pos,
+		glm::dvec2 size = glm::dvec2(10.0f, 10.0f),
 		float rotate = 0.0f,
 		glm::vec3 color = glm::vec3(1.0f));
 	/* Draw a solid color rectangle.
@@ -31,12 +31,12 @@ public:
 	* @param rotate CCW Rotation, in degrees
 	* @param color RGB color value of the texture
 	*/
-	void drawSprite(glm::vec2 pos,
-		glm::vec2 size = glm::vec2(10.0f, 10.0f),
+	void drawSprite(glm::dvec2 pos,
+		glm::dvec2 size = glm::dvec2(10.0f, 10.0f),
 		float rotate = 0.0f,
 		glm::vec3 color = glm::vec3(1.0f));
-	Shader shader;
-	GLuint VAO;
 	void initRenderData();
 private:
+	Shader shader;
+	GLuint VAO;
 };

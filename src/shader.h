@@ -15,7 +15,7 @@ public:
 	Shader& use();
 	void setInt(const char* name, GLint value);
 	void setFloat(const char* name, GLfloat value);
-	void setVec2f(const char* name, glm::vec2& vec2);
+	void setVec2f(const char* name, glm::dvec2& vec2);
 	void setVec3f(const char* name, GLfloat a, GLfloat b, GLfloat c);
 	void setVec3f(const char* name, glm::vec3& vec3);
 	void setVec4f(const char* name, glm::vec4& vec4);
