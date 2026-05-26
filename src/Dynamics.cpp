@@ -49,6 +49,23 @@ void collide(PhysObject& objA, PhysObject& objB, ContactPoint& cp, glm::dvec2 no
 	applyImpulse(objA, objB, { cp.pos, r_AP, r_BP }, J);
 }
 
+// Resolve two clipping bodies in a Manifold using Baumgarte stabilization
+void correctPos(Manifold& manifold) {
+	const double slop = 0.01;
+	const double percent = 0.2;
+	for (int i = 0; i < manifold.count; i++) {
+
+		ContactPoint& cp = manifold.points[i];
+		double correctMag = std::max(cp.penetration - slop, 0.0) * percent;
+		glm::dvec2 correction = correctMag * manifold.normal;
+		double totalInvMass = manifold.A->invMass + manifold.B->invMass;
+
+		// apply to both objects
+		manifold.A->pos -= correction * (manifold.A->invMass / totalInvMass);
+		manifold.B->pos += correction * (manifold.B->invMass / totalInvMass);
+	}
+}
+
 void collide2D(PhysObject& objA, PhysObject& objB, Manifold& manifold) {
 	
 	for (int i = 0; i < manifold.count; i++) {
@@ -57,6 +74,7 @@ void collide2D(PhysObject& objA, PhysObject& objB, Manifold& manifold) {
 		applyImpulse(objA, objB, cp, impulse);
 		collide(objA, objB, cp, manifold.normal);
 	}
+	correctPos(manifold);
 
 }
 
