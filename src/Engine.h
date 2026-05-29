@@ -6,11 +6,21 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #include <utility>
+#include <unordered_map>
+#include "PhysTypes.h"
 #include "PhysObject.h"
 #include "resource_manager.h"
 #include "Renderer.h"
 
 typedef std::pair<PhysObject*, PhysObject*> PhysObjectPair;
+struct PairHash
+{
+	std::size_t operator()(const PhysObjectPair& p) const {
+		std::size_t h1 = std::hash<PhysObject*>()(p.first);
+		std::size_t h2 = std::hash<PhysObject*>()(p.second);
+		return h1 ^ (h2 << 1);
+	}
+};
 class Engine {
 public:
 	GLFWwindow* window;
@@ -32,6 +42,7 @@ public:
 
 private:
 	void pushIntoScreenBounds(PhysObject& obj);
+	std::unordered_map<PhysObjectPair, Manifold, PairHash> manifoldCache;
 };
 
 inline PhysObjectPair MakePair(PhysObject* A, PhysObject* B) {
@@ -39,12 +50,3 @@ inline PhysObjectPair MakePair(PhysObject* A, PhysObject* B) {
 		? PhysObjectPair(A, B)
 		: PhysObjectPair(B, A);
 }
-
-struct PairHash
-{
-	std::size_t operator()(const PhysObjectPair& p) const {
-		std::size_t h1 = std::hash<PhysObject*>()(p.first);
-		std::size_t h2 = std::hash<PhysObject*>()(p.second);
-		return h1 ^ (h2 << 1);
-	}
-};

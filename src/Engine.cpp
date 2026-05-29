@@ -3,9 +3,7 @@
 #include "Dynamics.h"
 #include "DebugTools.h"
 #include <vector>
-#include <unordered_map>
 
-std::unordered_map<PhysObjectPair, Manifold, PairHash> manifoldCache;
 
 Engine::Engine(GLFWwindow* win, Renderer* renderer) :
 	WIDTH(8),
@@ -31,6 +29,7 @@ void Engine::addObject(PhysObject* obj)
 }
 void Engine::reset() {
 	objects.clear();
+	manifoldCache.clear();
 }
 // make sure an object doesnt go off screen bounds
 void Engine::pushIntoScreenBounds(PhysObject& obj) {
