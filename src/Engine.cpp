@@ -90,19 +90,23 @@ void Engine::updateSim(double dt) {
 			for (int i = 0; i < m.count; i++) {
 				// the best match
 				ContactPoint* best = nullptr;
-				double bestDistSq = DBL_MAX;
+				double bestDist = DBL_MAX;
 				// iterate over old manifold
 				for (int j = 0; j < oldM.count; j++) {
 					// find the distance, and get new minimum
-					double dist_sq = glm::length(m.points[i].pos - oldM.points[j].pos);
-					if (dist_sq < bestDistSq) {
-						bestDistSq = dist_sq;
+					double dist = glm::length(m.points[i].pos - oldM.points[j].pos);
+					if (dist < bestDist) {
+						bestDist = dist;
 						best = &oldM.points[j];
 					}
 				}
 				// if we found a best, and if its within the threshold then we can copy the normImpulse
-				if (best && bestDistSq < dist_threshold) {
+				if (best && bestDist < dist_threshold &&
+					glm::dot(m.normal, oldM.normal) > 0.95) {
 					m.points[i].normImpulse = best->normImpulse;
+				}
+				else {
+					m.points[i].normImpulse = 0.0;
 				}
 			}
 		}
