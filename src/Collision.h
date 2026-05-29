@@ -10,12 +10,8 @@ typedef std::vector<glm::dvec2> Vec2DCollection;
 struct Projection {
 	double min;
 	double max;
-	int overlap(Projection& p2) const {
-		return min < p2.max && p2.min < max;
-	}
-	double getOverlap(Projection& p2) const {
-		return glm::min(max, p2.max) - glm::max(min, p2.min);
-	}
+	int overlap(Projection& p2) const;
+	double getOverlap(Projection& p2) const;
 	Projection(double min, double max) : min(min), max(max) {}
 	Projection(Vec2DCollection vertices, Axis axis);
 };

@@ -4,6 +4,13 @@
 
 typedef std::vector<glm::dvec2> Vec2DCollection;
 
+double Projection::getOverlap(Projection& p2) const {
+	return glm::min(max, p2.max) - glm::max(min, p2.min);
+}
+int Projection::overlap(Projection& p2) const {
+	const double EPSILON = 1e-5;
+	return min <= p2.max + EPSILON && p2.min <= max + EPSILON;
+}
 // Apply a projection from a collection of vertices onto an axis
 Projection::Projection(Vec2DCollection vertices, Axis axis) {
 	min = glm::dot(axis, vertices[0]);
@@ -186,8 +193,8 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 	// clip the inc edge by the first vertex of the ref edge
 
 	Vec2DCollection* cp = clip(inc.start, inc.end, refv, o1);
-	// if the clipping didnt result in 2 points, we have failed to generate our points
-	if (cp->size() < 2) {
+	// if the clipping didnt result in 1+ points, we have failed to generate our points
+	if (cp->empty()) {
 		out.count = 0;
 		return false;
 	}
@@ -195,8 +202,8 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 	// since we're clipping in the opposite direction we flip the direction and offset
 	double o2 = glm::dot(refv, ref.end);
 	cp = clip(cp->at(0), cp->at(1), -refv, -o2);
-	// also fail if not 2 points left
-	if (cp->size() < 2) {
+	// also fail if not 1+ points left
+	if (cp->empty()) {
 		out.count = 0;
 		return false;
 	}
@@ -226,7 +233,7 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 		// the point we're working on
 		ContactPoint& pt = out.points[out.count];
 		out.points[out.count].pos = v;
-		pt.penetration = glm::dot(n, (v - ref.start));
+		pt.penetration = -glm::dot(refNorm, (v - ref.start));
 		out.count++;
 	}
 	// if we flipped ref and inc then update the manifold's A and B respectively
@@ -263,7 +270,9 @@ bool genManifold(PhysObject& obj1, PhysObject& obj2, Manifold& out) {
 	if (out.count == 2) {
 		glm::dvec2 dv = (out.points[0].pos + out.points[1].pos) * 0.5;
 		double d = glm::distance(out.points[0].pos, out.points[1].pos);
-		if (d < 0.003) {
+		// we dynamically change our tolerance depending on the object's size
+		double tolerance = 0.01 * std::min(obj1.size.x, obj1.size.y);
+		if (d < tolerance) {
 			ContactPoint merged;
 			merged.pos = dv;
 			merged.penetration = std::max(out.points[0].penetration, out.points[1].penetration);
