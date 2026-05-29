@@ -57,7 +57,6 @@ void Engine::pushIntoScreenBounds(PhysObject& obj) {
 // update positions and velocities
 void Engine::updateSim(double dt) {
 
-	// Iterate through each object
 	// generate a pair of each object to test upon:
 	std::vector<std::pair<PhysObject&, PhysObject&>> pairs;
 	// pair each object with one another
@@ -66,6 +65,13 @@ void Engine::updateSim(double dt) {
 			pairs.emplace_back(objects[i], objects[j]);
 		}
 	}
+	// integrate forces
+	for (auto& obj : objects) {
+		obj.preUpdate(dt);
+	}
+
+	// start collision detection and manifold generation
+
 	// the contact manifolds we will generate
 	std::vector<Manifold> manifolds;
 	// iterate through each pair
@@ -114,10 +120,6 @@ void Engine::updateSim(double dt) {
 		}
 		// push the new manifold to our manifold list
 		manifolds.push_back(m);
-	}
-	// integrate forces
-	for (auto& obj : objects) {
-		obj.preUpdate(dt);
 	}
 	// prestep
 	for (auto& m : manifolds) {
