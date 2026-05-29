@@ -39,6 +39,7 @@ public:
 	PhysObject(glm::dvec2 pos, glm::dvec2 size, double rotation, bool isStatic);
 	void init(glm::dvec2 pos, glm::dvec2 size, glm::dvec2 velocity = glm::dvec2(0.0f, 0.0f), glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f));
 	void update(double dt);
+	void preUpdate(double dt);
 	glm::dvec2 getPointVelocity(glm::dvec2 r);
 	void render(Renderer* renderer) const;
 	glm::dvec2 center() {

@@ -35,10 +35,10 @@ public:
 	}
 	
 	void drawLine(glm::vec2 a, glm::vec2 b, glm::vec3 color) {
-		lines.push_back({ { a, color }, { b, color } });
+		lines.push_back({ { a * 100.0f, color }, { b * 100.0f, color } });
 	}
 	void drawPoint(glm::vec2 p, glm::vec3 color) {
-		points.push_back({p, color});
+		points.push_back({p * 100.0f, color});
 	}
 
 	void clear() {

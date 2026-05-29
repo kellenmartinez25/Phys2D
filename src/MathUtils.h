@@ -7,6 +7,9 @@ inline double Cross(glm::dvec2 v1, glm::dvec2 v2) {
 inline glm::dvec2 Cross(glm::dvec2 v, double z) {
 	return glm::dvec2(v.y * z, -v.x * z);
 }
+inline glm::dvec2 Cross(double z, glm::dvec2 v) {
+	return glm::dvec2(-v.y * z, v.x * z);
+}
 inline glm::dvec2 Perp(glm::dvec2 vec) {
 	return glm::dvec2(-vec.y, vec.x);
 }

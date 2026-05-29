@@ -5,10 +5,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
+#include <utility>
 #include "PhysObject.h"
 #include "resource_manager.h"
 #include "Renderer.h"
 
+typedef std::pair<PhysObject*, PhysObject*> PhysObjectPair;
 class Engine {
 public:
 	GLFWwindow* window;
@@ -20,9 +22,29 @@ public:
 	glm::dvec2 gravityField = glm::dvec2(0.0f, 10.0f);
 	Engine(GLFWwindow* win, Renderer* renderer);
 	Engine();
+	// Reset the engine and remove all objects
+	void reset();
+	// Add a PhysObject to the simulation
 	void addObject(PhysObject* obj);
+	// Update the simulation with a timestep dt
 	void updateSim(double dt);
 	std::vector<PhysObject> objects;
+
 private:
 	void pushIntoScreenBounds(PhysObject& obj);
+};
+
+inline PhysObjectPair MakePair(PhysObject* A, PhysObject* B) {
+	return (A < B)
+		? PhysObjectPair(A, B)
+		: PhysObjectPair(B, A);
+}
+
+struct PairHash
+{
+	std::size_t operator()(const PhysObjectPair& p) const {
+		std::size_t h1 = std::hash<PhysObject*>()(p.first);
+		std::size_t h2 = std::hash<PhysObject*>()(p.second);
+		return h1 ^ (h2 << 1);
+	}
 };

@@ -4,7 +4,6 @@
 
 typedef std::vector<glm::dvec2> Vec2DCollection;
 
-
 // Apply a projection from a collection of vertices onto an axis
 Projection::Projection(Vec2DCollection vertices, Axis axis) {
 	min = glm::dot(axis, vertices[0]);
@@ -110,20 +109,33 @@ Edge bestEdge(const PhysObject& obj1, const Axis& sepNormal) {
 		}
 	}
 	glm::dvec2& v = obj1Verts[index];
-	glm::dvec2& v1 = obj1Verts[index + 1 == 4 ? 0 : index + 1];
-	glm::dvec2& v0 = obj1Verts[index - 1 == -1 ? 3 : index - 1];
+	int prev = (index - 1 + 4) % 4;
+	int next = (index + 1) % 4;
 
-	glm::dvec2 l = v - v1;
-	glm::dvec2 r = v - v0;
+	glm::dvec2& vNext = obj1Verts[next];
+	glm::dvec2& vPrev = obj1Verts[prev];
 
-	l = glm::normalize(l);
-	r = glm::normalize(r);
-	
-	if (glm::dot(r, sepNormal) <= glm::dot(l, sepNormal)) {
-		return Edge(v, v0, v);
+	glm::dvec2 edge1 = glm::normalize(v - vPrev);
+	glm::dvec2 edge2 = glm::normalize(vNext - v);
+
+	glm::dvec2 norm1 = glm::normalize(Cross(edge1, 1.0));
+	glm::dvec2 norm2 = glm::normalize(Cross(edge2, 1.0));
+
+	//glm::dvec2 l = v - vNext;
+	//glm::dvec2 r = v - vPrev;
+
+	//l = glm::normalize(l);
+	//r = glm::normalize(r);
+
+	if (glm::dot(norm1, sepNormal) > glm::dot(norm2, sepNormal)) {
+		return Edge{v, vPrev, v};
 	}
-	else
-		return Edge(v, v, v1);
+	return Edge{v, v, vNext};
+	//if (glm::dot(r, sepNormal) <= glm::dot(l, sepNormal)) {
+	//	return Edge(v, vPrev, v);
+	//}
+	//else
+	//	return Edge(v, v, vNext);
 }
 
 // clip 2 points
@@ -191,7 +203,7 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 
 	// last clip: clip along the reference into the refNorm
 	// get the normal of the reference edge
-	glm::dvec2 refNorm = Cross(ref.end - ref.start, -1.0f);
+	glm::dvec2 refNorm = Cross(ref.end - ref.start, 1.0f);
 	// remember to normalize it too
 	refNorm = glm::normalize(refNorm);
 
@@ -201,11 +213,11 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 
 
 	// finally, we remove any points that are not past this maximum depth
-	if (glm::dot(refNorm, cp->at(1)) - max < 0.0) {
+	if (glm::dot(refNorm, cp->at(1)) - max > 0.0) {
 		cp->pop_back();
 		erasedLast = true;
 	}
-	if (glm::dot(refNorm, cp->at(0)) - max < 0.0) {
+	if (glm::dot(refNorm, cp->at(0)) - max > 0.0) {
 		cp->erase(cp->begin());
 	}
 	// build manifold
@@ -214,10 +226,15 @@ bool getClippedPoints(Edge& e1, Edge& e2, glm::dvec2 sepNorm, Manifold& out) {
 		// the point we're working on
 		ContactPoint& pt = out.points[out.count];
 		out.points[out.count].pos = v;
-		pt.penetration =  glm::dot(refNorm, v) - glm::dot(refNorm, ref.start);
+		pt.penetration = glm::dot(n, (v - ref.start));
 		out.count++;
 	}
-
+	// if we flipped ref and inc then update the manifold's A and B respectively
+	if (flip) {
+		PhysObject* oldA = out.A;
+		out.A = out.B;
+		out.B = oldA;
+	}
 
 	return true;
 }
@@ -234,19 +251,28 @@ bool genManifold(PhysObject& obj1, PhysObject& obj2, Manifold& out) {
 	}
 	glm::dvec2 sepNorm = obj2.center() - obj1.center();
 	double isPointingRight = glm::dot(sepNorm, mtv->smallest) / glm::length(sepNorm);
-	if (glm::dot(obj1.center() - obj2.center(), mtv->smallest) < 0.0)
+	if (glm::dot(obj1.center() - obj2.center(), mtv->smallest) > 0.0)
 		mtv->smallest *= -1.0;
 	
-	Edge e1 = bestEdge(obj1, -mtv->smallest);
-	Edge e2 = bestEdge(obj2, mtv->smallest);
+	Edge e1 = bestEdge(obj1, mtv->smallest);
+	Edge e2 = bestEdge(obj2, -mtv->smallest);
 	
 	bool state = getClippedPoints(e1, e2, mtv->smallest, out);
 
-	// update collision point parameters
-	for (auto& cp : out.points) {
-		cp.rA = cp.pos - obj1.center();
-		cp.rB = cp.pos - obj2.center();
+	// check if the two generated points are really close to each other, and reduce the manifold if so.
+	if (out.count == 2) {
+		glm::dvec2 dv = (out.points[0].pos + out.points[1].pos) * 0.5;
+		double d = glm::distance(out.points[0].pos, out.points[1].pos);
+		if (d < 0.003) {
+			ContactPoint merged;
+			merged.pos = dv;
+			merged.penetration = std::max(out.points[0].penetration, out.points[1].penetration);
+			merged.normImpulse = out.points[0].normImpulse + out.points[1].normImpulse;
+			out.points[0] = merged;
+			out.count = 1;
+		}
 	}
+	//delete mtv;
 
 	return state;
 }

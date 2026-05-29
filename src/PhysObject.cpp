@@ -1,6 +1,6 @@
 #include "PhysObject.h"
 #include <limits>
-
+#define SCALE 100.0
 constexpr double ALPHA_DECAY = 0.01;
 
 PhysObject::PhysObject() :
@@ -48,6 +48,7 @@ PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double rotation, bool is
 
 // set the inverse mass / inertia
 void PhysObject::calcInverses() {
+
 	// did you know? 1 / inf = 0
 	// we instead calculate the inverse inertia and mass, for dealing with static objects
 	// static objects will have an infinite mass, meaning they will have an inverse mass/inertia of exactly 0.0
@@ -63,6 +64,14 @@ void PhysObject::init(glm::dvec2 pos, glm::dvec2 size, glm::dvec2 velocity, glm:
 	this->velocity = velocity;
 	this->angle = 0.0f;
 }
+void PhysObject::preUpdate(double dt) {
+	if (!isStatic) {
+		// get force vector
+		glm::dvec2 gravity = glm::dvec2(0.0, -9.80);
+		velocity += dt * gravity;
+	}
+}
+
 // update position via small timestep, using eulers method (i think)
 void PhysObject::update(double dt) {
 	if (!isStatic) {
@@ -71,7 +80,7 @@ void PhysObject::update(double dt) {
 		// update velocity from force:
 		// F = m * a -> a = F/m
 		// v1 = v0 + a * dt -> v1 = v0 + (F/m) * dt
-		velocity += (dt * (1.0 / mass)) * force;
+		//velocity += (dt * (1.0 / mass)) * force;
 		// update our position from velocity & timestep
 		pos += dt * velocity;
 		// Update angular velocity too, from ang accel
@@ -87,8 +96,8 @@ void PhysObject::update(double dt) {
 // use a provided renderer object to draw the PhysObject
 void PhysObject::render(Renderer* renderer) const {
 	renderer->drawSprite(
-		pos,
-		size,
+		pos*SCALE,
+		size*SCALE,
 		angle,
 		color
 	);

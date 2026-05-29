@@ -14,6 +14,8 @@ void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods);
 void error_callback(int err, const char* desc);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+void placeObjects();
+
 // engine object
 Engine ENGINE;
 
@@ -87,34 +89,7 @@ int main()
 	// what to scale our random value by for the velocity
 	constexpr float vScale = 200.0f;
 
-	ENGINE.addObject(
-		new PhysObject(
-			glm::dvec2(500.0, 250.0),
-			glm::dvec2(100.0, 100.0),
-			1.0f,
-			30.0f,
-			glm::dvec2(-300.0, 100.0)
-		)
-	);
-	ENGINE.addObject(
-		new PhysObject(
-			glm::dvec2(400.0, 200.0),
-			glm::dvec2(50.0, 100.0),
-			1.0f,
-			0.0f
-		)
-	);
-
-	PhysObject borders[] = {
-		PhysObject(
-			glm::dvec2(0.0, 0.0),
-			glm::dvec2(800.0, 100.0),
-			0.0,
-			true)
-	};
-	for (PhysObject& obj : borders) {
-		ENGINE.addObject(&obj);
-	}
+	placeObjects();
 	//for (int i = 0; i < nBoxes; i++) {
 	//	// random x/y things
 	//	float vx = rand(gen);
@@ -161,7 +136,37 @@ int main()
 
 	return 0;
 }
+void placeObjects() {
+	ENGINE.addObject(
+		new PhysObject(
+			glm::dvec2(4.0, 5.0),
+			glm::dvec2(1.0, 1.0),
+			1.0f,
+			0.0f,
+			glm::dvec2(0, -1.0)
+		)
+	);
+	ENGINE.addObject(
+		new PhysObject(
+			glm::dvec2(4.0, 3.0),
+			glm::dvec2(1.0, 1.0),
+			1.0f,
+			0.0f,
+			glm::dvec2(0.0, 0.0)
+		)
+	);
 
+	PhysObject borders[] = {
+		PhysObject(
+			glm::dvec2(0.0, 0.0),
+			glm::dvec2(8.0, 1.0),
+			0.0,
+			true)
+	};
+	for (PhysObject& obj : borders) {
+		ENGINE.addObject(&obj);
+	}
+}
 void error_callback(int err, const char* desc)
 {
 	fprintf(stderr, "Error %s\n", desc);
@@ -169,6 +174,10 @@ void error_callback(int err, const char* desc)
 void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE) {
 		glfwSetWindowShouldClose(win, GLFW_TRUE);
+	}
+	if (key == GLFW_KEY_R) {
+		ENGINE.reset();
+		placeObjects();
 	}
 }
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
