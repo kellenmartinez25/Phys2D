@@ -16,8 +16,7 @@ double vBias(double penetration) {
 
 void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 
-	// coeff of restitution
-	double e = 1.0;
+
 
 	auto vA = getPointVelocity(*m.A, cp.rA);
 	auto vB = getPointVelocity(*m.B, cp.rB);
@@ -33,24 +32,24 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 	// sleepy
 	if (fabs(vRelNorm) < 0.02 && cp.penetration < 0.02)
 		vRelNorm = 0.0;
-	if (fabs(vRelNorm) < 0.05)
-		e = 0.0;
+	// stabilize the resulting impulse
+	const double beta = 0.05, slop = 0.02, maxBias = 0.2;
+	double bias = beta * std::max(cp.penetration - slop, 0.0) / dt;
+	bias = std::min(bias, maxBias);
 
 	// if the vRel along the normal is > 0, then the two objects are moving apart (at this contact point)
 	// meaning that we shouldnt resolve anything in this case.
-	if (vRelNorm > 0.0)
+	if (vRelNorm > 0.0 && cp.penetration <= slop)
 		return;
-	auto rA_crossN = Cross(cp.rA, m.normal);
-	auto rB_crossN = Cross(cp.rB, m.normal);
-	/*double k = m.A->invMass + m.B->invMass +
-		(rA_crossN * rA_crossN * m.A->invInertia) +
-		(rB_crossN * rB_crossN * m.B->invInertia);*/
 
 	double k = cp.effectiveMass > 0.0 ? (1.0 / cp.effectiveMass) : 0.0;
-	const double beta = 0.8, slop = 0.01;
-	double bias = beta * std::max(cp.penetration - slop, 0.0) / dt;
-
-	double j = (bias - vRelNorm) / k;
+	// coeff of restitution
+	double e = 0.0;
+	//if (vRelNorm < -1.0)
+		//e = 0.5;
+	double bouncy = -e * vRelNorm;
+	double v_target = bias + bouncy;
+	double j = (v_target - vRelNorm) * cp.effectiveMass;
 	// accurate impulse solver by getting the *change* in old->new impulse from our manifold
 	double oldImpulse = cp.normImpulse;
 	// get the accumulated normal impulse
@@ -69,7 +68,7 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 }
 
 // try to resolve a contact surface's impulses using rigid body constrait solving
-void resolveContactSurfaceManifold(Manifold& m) {
+void resolveContactSurfaceManifold(Manifold& m, double dt) {
 	PhysObject& A = *m.A;
 	PhysObject& B = *m.B;
 	glm::dvec2& n = m.normal;
@@ -90,12 +89,29 @@ void resolveContactSurfaceManifold(Manifold& m) {
 	glm::dvec2& rB0 = c0.rB;
 	glm::dvec2& rA1 = c1.rA;
 	glm::dvec2& rB1 = c1.rB;
-
+	// velocity vector
 	auto v0 = getPointVelocity(B, rB0) - getPointVelocity(A, rA0);
 	auto v1 = getPointVelocity(B, rB1) - getPointVelocity(A, rA1);
 
-	double b0 = glm::dot(v0, n);
-	double b1 = glm::dot(v1, n);
+	// bias, for stabilization
+	const double beta = 0.08, slop = 0.02, maxBias = 0.5;
+	double bias0 = beta * std::max(c0.penetration - slop, 0.0) / dt;
+	double bias1 = beta * std::max(c1.penetration - slop, 0.0) / dt;
+	// limit
+	bias0 = std::min(bias0, maxBias);
+	bias1 = std::min(bias1, maxBias);
+
+	// normalized
+	double vn0 = glm::dot(v0, n);
+	double vn1 = glm::dot(v1, n);
+	// target norm velocity vector
+	double b0 = bias0 - vn0;
+	double b1 = bias1 - vn1;
+	// pre compute cross products
+	double rA0xn = Cross(rA0, n);
+	double rB0xn = Cross(rB0, n);
+	double rA1xn = Cross(rA1, n);
+	double rB1xn = Cross(rB1, n);
 
 	// construct the matrix
 	double K00, K11, K01, K10;
@@ -103,39 +119,104 @@ void resolveContactSurfaceManifold(Manifold& m) {
 	// K = m_A^-1 + m_B^-1 + (rA x n)^2 * I_A^-1 + (rB x n)^2 * I_B^-1
 
 	K00 = A.invMass + B.invMass +
-		Cross(rA0, n) * Cross(rA0, n) * A.invInertia +
-		Cross(rB0, n) * Cross(rB0, n) * B.invInertia;
+		rA0xn * rA0xn * A.invInertia +
+		rB0xn * rB0xn * B.invInertia;
 	K11 = A.invMass + B.invMass +
-		Cross(rA1, n) * Cross(rA1, n) * A.invInertia +
-		Cross(rB1, n) * Cross(rB1, n) * B.invInertia;
+		rA1xn * rA1xn * A.invInertia +
+		rB1xn * rB1xn * B.invInertia;
 	K01 = A.invMass + B.invMass +
-		Cross(rA0, n) * Cross(rA1, n) * A.invInertia +
-		Cross(rB0, n) * Cross(rB1, n) * B.invInertia;
+		rA0xn * rA1xn * A.invInertia +
+		rB0xn * rB1xn * B.invInertia;
 	K10 = K01;
 
-	// get the det
-	double det = K00 * K11 - K01 * K10;
-	if (fabs(det) < 1e-8) return;
-	
-	double invDet = 1.0 / det;
+	// aquire the impulses from the previous frame/iteration
+	// we actually dont really need to solve for the entire impulse from scratch every calculation
+	// you should instead solve for a change in J and then only apply the delta, the change in I to the objects
+	// this is the same thing we do in the 1D manifold solver (except its way more complicated now, thank you supreme court eunuch ChatGPT)
+	double old0 = c0.normImpulse;
+	double old1 = c1.normImpulse;
+	double new0 = old0;
+	double new1 = old1;
+	bool solved = false;
+	{
+		// try to solve K * deltaImpulse = b
+		// (deltaImpulse = [d0, d1]
+		// so now we can get the impulse changes to correct both of our contact velocities
 
-	// calculate the j vector
-	double j0, j1;
+		// determinate
+		double det = K00 * K11 - K01 * K10;
+		// is it really small? if not then it should be worth while to use
+		if (fabs(det) > 1e-9) {
+			double invDet = 1.0 / det;
+
+			// achieve the inverse of the 2x2 matrix:
+			// K^-1 = 1/det * [  K11 -K01 ]
+			//				  [ -K10  K00 ]
+			// so then:
+			// deltaI = inv(K) * b
+			double d0 = invDet * (K11 * b0 - K01 * b1);
+			double d1 = invDet * (-K10 * b0 + K00 * b1);
+
+			double canidate0 = old0 + d0;
+			double canidate1 = old1 + d1;
+			// these contact impulses that may or may not be used,
+			// should be pushing the objects apart, but they shouldnt pull them together!
+			// we need to make sure that each of these accumulated impulses stay above >= 0.0
+			// if our canidate impulses check out, then this is the valid solution and we get off easy
+			if (canidate0 >= 0.0 && canidate1 >= 0.0) {
+				new0 = canidate0;
+				new1 = canidate1;
+				solved = true;
+			}
+		}
+	}
+	if (!solved) {
+		// we come here when the full 2D manifold solution was invalid,
+		// due to at least 1 of the impulses were negative.
+		// we have a delightful remedy for this by disabling a contact and solving the other one on its own
+		double d0 = 0.0;
+		if (K00 > 0.0) {
+			d0 = b0 / K00;
+		}
+		new0 = std::max(old0 + d0, 0.0);
+		new1 = 0.0;
+		solved = true;
+	}
+
+	if (new1 == 0.0) {
+		// if contact 0 ends up inactive, then we will try to solve contact 1.
+		// this will handle cases where only the 2nd ContactPoint can actually support the collision.
+		double d1 = 0.0;
+		if (K11 > 0.0) {
+			d1 = b1 / K11;
+		}
+		new0 = 0.0;
+		new1 = std::max(old1 + d1, 0.0);
+	}
+
+	// now, with things in expected conditions, we can compute the changes in impulse.
+	// because of the multiple iterations, we apply only dI so that we dont keep on doing the same impulse application on every iteration
+	double delta_I0 = new0 - old0;
+	double delta_I1 = new1 - old1;
+	// update our accumulated impulses, for usage by the next iteration and prestep
+	c0.normImpulse = new0;
+	c0.normImpulse = new1;
 	
-	j0 = invDet * (K11 * (-b0) - K01 * (-b1));
-	j1 = invDet * (-K10 * (-b0) + K00 * (-b1));
+	// we can calculate our J vectors
+	glm::dvec2 J0 = delta_I0 * n;
+	glm::dvec2 J1 = delta_I1 * n;
 
 	// apply the solved impulses
-	applyImpulse(A, B, c0, j0 * n);
-	applyImpulse(A, B, c1, j1 * n);
+	applyImpulse(A, B, c0, J0);
+	applyImpulse(A, B, c1, J1);
 
 
 }
 
 // Resolve two clipping bodies in a Manifold using Baumgarte stabilization
 void correctPos(Manifold& manifold) {
-	const double slop = 0.01;
-	const double percent = 0.80;
+	const double slop = 0.02;
+	const double percent = (manifold.count == 1) ? 0.05 : 0.10;
 	
 	// find the contact point with maximum penetration; this is the one we will be correcting from
 	double maxPenetration = 0.0;
@@ -155,9 +236,9 @@ void correctPos(Manifold& manifold) {
 }
 
  void collide2D(Manifold& manifold, double dt) {
-	// get the average point of collision
+	// we choose which method we use to solve our manifold based on its dimension
 	if (manifold.count == 2)
-		resolveContactSurfaceManifold(manifold);
+		resolveContactSurfaceManifold(manifold, dt);
 	else
 		resolveContactPoint(manifold, manifold.points[0], dt);
 }
