@@ -142,16 +142,16 @@ void placeObjects() {
 			glm::dvec2(4.0, 5.0),
 			glm::dvec2(1.0, 1.0),
 			1.0f,
-			0.0f,
-			glm::dvec2(0, -1.0)
+			glm::radians(0.0f),
+			glm::dvec2(0, -3.0)
 		)
 	);
 	ENGINE.addObject(
 		new PhysObject(
 			glm::dvec2(4.0, 3.0),
-			glm::dvec2(1.0, 1.0),
-			1.0f,
-			0.0f,
+			glm::dvec2(3.0, 1.0),
+			3.0f,
+			glm::radians(0.0f),
 			glm::dvec2(0.0, 0.0)
 		)
 	);

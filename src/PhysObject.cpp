@@ -98,7 +98,7 @@ void PhysObject::render(Renderer* renderer) const {
 	renderer->drawSprite(
 		pos*SCALE,
 		size*SCALE,
-		angle,
+		glm::degrees(angle),
 		color
 	);
 }
@@ -108,7 +108,7 @@ std::vector<glm::dvec2> PhysObject::getVertices() const {
 	glm::mat4 model(1.0f);
 	model = glm::translate(model, glm::vec3(size.x * 0.5f, size.y * 0.5f, 0.0f));
 	model = glm::translate(model, glm::vec3(pos, 0.0f));
-	model = glm::rotate(model, glm::radians(static_cast<float>(angle)), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, static_cast<float>(angle), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::scale(model, glm::vec3(size, 1.0f));
 	
 

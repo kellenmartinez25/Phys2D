@@ -9,7 +9,7 @@ public:
 	glm::dvec2 pos;
 	// Size of box
 	glm::dvec2 size;
-	/// Rotation CCW
+	/// Rotation CCW, radians.
 	double angle;
 	/// Angular Velocity; Positive = CCW
 	double angularVelocity=0.0f;
