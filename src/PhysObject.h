@@ -45,7 +45,6 @@ public:
 	glm::dvec2 center() {
 		return glm::dvec2(pos.x + 0.5f * size.x, pos.y + 0.5f * size.y);
 	}
-private:
 	// set the inverse mass / inertia
 	void calcInverses();
 };

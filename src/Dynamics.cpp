@@ -179,7 +179,7 @@ void resolveContactSurfaceManifold(Manifold& m, double dt) {
 		solved = true;
 	}
 
-	if (new1 == 0.0) {
+	if (new0 == 0.0) {
 		// if contact 0 ends up inactive, then we will try to solve contact 1.
 		// this will handle cases where only the 2nd ContactPoint can actually support the collision.
 		double d1 = 0.0;

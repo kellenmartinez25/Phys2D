@@ -1,4 +1,5 @@
-﻿// Phys2D.cpp : Defines the entry point for the application.
+﻿// Phys2D.cpp : Main entry point for the simulator. Includes user input handling,
+// setting up rendering, and contains the main engine/renderer update loop.
 //
 
 #include "Phys2D.h"
@@ -152,31 +153,15 @@ int main()
 void placeObjects() {
 	ENGINE.addObject(
 		new PhysObject(
-			glm::dvec2(3.0, 4),
+			glm::dvec2(3.0, 2),
 			glm::dvec2(1.0, 1.0),
 			1.0f,
-			glm::radians(0.0f),
-			glm::dvec2(0, 0.0)
-		)
-	);
-	ENGINE.addObject(
-		new PhysObject(
-			glm::dvec2(3.0, 7),
-			glm::dvec2(0.5, 0.3),
-			.5*.3,
-			glm::radians(0.0f),
+			glm::radians(30.0f),
 			glm::dvec2(0, 0.0)
 		)
 	);
 
-	ENGINE.addObject(
-		new PhysObject(
-			glm::dvec2(1, 3),
-			glm::dvec2(4.0, 0.2),
-			glm::radians(30.0),
-			true
-		)
-	);
+
 	
 
 	PhysObject borders[] = {
@@ -257,6 +242,10 @@ void updateSelectedObject(GLFWwindow* win) {
 	y -= queuedObj.size.y * 0.5;
 	queuedObj.pos.x = (x);
 	queuedObj.pos.y = y;
+	// mass should be dependant on surface area
+	queuedObj.mass = queuedObj.size.x * queuedObj.size.y;
+	// also remember to update the inverse mass/inertia correctly
+	queuedObj.calcInverses();
 }
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
