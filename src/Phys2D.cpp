@@ -13,11 +13,18 @@ int SCR_HEIGHT = 600;
 void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods);
 void error_callback(int err, const char* desc);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
+void handleMouseCursor(GLFWwindow* win, double x, double y);
+void handleMouseButton(GLFWwindow* win, int button, int action, int mods);
+void handleScrollWheel(GLFWwindow* win, double dx, double dy);
+void updateSelectedObject(GLFWwindow* win);
 void placeObjects();
 
 // engine object
 Engine ENGINE;
+
+// for placing object; this is rendered but not actually added to the engine
+// its a preview of what you will place
+PhysObject queuedObj;
 
 int main()
 {
@@ -39,7 +46,9 @@ int main()
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwMakeContextCurrent(window);
-	
+	glfwSetCursorPosCallback(window, handleMouseCursor);
+	glfwSetMouseButtonCallback(window, handleMouseButton);
+	glfwSetScrollCallback(window, handleScrollWheel);
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
@@ -120,6 +129,9 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 		// update simulation with constant time step
 		ENGINE.updateSim(0.005);
+
+		// also put the queued/selected object to spawn in to the screen
+		queuedObj.render(renderer);
 		// debug draw
 		DebugDraw::get().render();
 		// swap buffers
@@ -131,6 +143,7 @@ int main()
 	// delete resources
 	ResourceManager::clear();
 	delete renderer;
+	ENGINE.reset();
 	// terminate window
 	glfwTerminate();
 
@@ -139,14 +152,22 @@ int main()
 void placeObjects() {
 	ENGINE.addObject(
 		new PhysObject(
-			glm::dvec2(3.0, 5),
+			glm::dvec2(3.0, 4),
 			glm::dvec2(1.0, 1.0),
 			1.0f,
 			glm::radians(0.0f),
 			glm::dvec2(0, 0.0)
 		)
 	);
-	
+	ENGINE.addObject(
+		new PhysObject(
+			glm::dvec2(3.0, 7),
+			glm::dvec2(0.5, 0.3),
+			.5*.3,
+			glm::radians(0.0f),
+			glm::dvec2(0, 0.0)
+		)
+	);
 
 	ENGINE.addObject(
 		new PhysObject(
@@ -177,10 +198,65 @@ void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods) 
 	if (key == GLFW_KEY_ESCAPE) {
 		glfwSetWindowShouldClose(win, GLFW_TRUE);
 	}
-	if (key == GLFW_KEY_R) {
-		ENGINE.reset();
-		placeObjects();
+
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_R) {
+			ENGINE.reset();
+			placeObjects();
+		}
+		double mouseX, mouseY;
+		glfwGetCursorPos(win, &mouseX, &mouseY);
+		mouseY = SCR_HEIGHT - mouseY;
+
+
+		if (key == GLFW_KEY_EQUAL) {
+			queuedObj.size *= 1.1;
+		}
+		if (key == GLFW_KEY_MINUS) {
+			queuedObj.size *= 0.9;
+		}
 	}
+
+	updateSelectedObject(win);
+}
+
+void handleMouseCursor(GLFWwindow* win, double x, double y) {
+	updateSelectedObject(win);
+	
+}
+void handleMouseButton(GLFWwindow* win, int button, int action, int mods) {
+	if (action == GLFW_PRESS) {
+		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+			// we clicked mouse1; add the preview object to the engine
+			// copy it to a new one
+			PhysObject* toAdd = new PhysObject();
+			toAdd->pos = queuedObj.pos;
+			toAdd->size = queuedObj.size;
+			toAdd->angle = queuedObj.angle;
+			ENGINE.addObject(toAdd);
+		}
+		// rotation controls for object
+
+	}
+	
+}
+
+void handleScrollWheel(GLFWwindow* win, double dx, double dy) {
+	std::cout << dy << std::endl;
+	queuedObj.angle += dy * glm::radians(15.0);
+	updateSelectedObject(win);
+}
+
+void updateSelectedObject(GLFWwindow* win) {
+	double x, y;
+	glfwGetCursorPos(win, &x, &y);
+	// update the preview's screen position
+	x /= 100.0;
+	y = (SCR_HEIGHT - y) / 100.0;
+	x -= queuedObj.size.x * 0.5;
+	y -= queuedObj.size.y * 0.5;
+	queuedObj.pos.x = (x);
+	queuedObj.pos.y = y;
 }
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
