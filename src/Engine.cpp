@@ -104,9 +104,11 @@ void Engine::updateSim(double dt) {
 				if (best && bestDist < dist_threshold &&
 					glm::dot(m.normal, oldM.normal) > 0.95) {
 					m.points[i].normImpulse = best->normImpulse;
+					m.points[i].tangentImpulse = best->tangentImpulse;
 				}
 				else {
 					m.points[i].normImpulse = 0.0;
+					m.points[i].tangentImpulse = 0.0;
 				}
 			}
 		}

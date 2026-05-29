@@ -12,10 +12,13 @@ struct ContactPoint {
 	glm::dvec2 rB;
 	// amount of penetration
 	double penetration;
-	
+	// used for impulse calculation
 	double effectiveMass;
-
+	// for friction
+	double tangentEffectiveMass;
+	// The impulse calculated on the previous solve
 	double normImpulse = 0.0;
+	double tangentImpulse = 0.0;
 };
 // Represents a contact manifold; a collection of 0-2 contact points.
 // 0 points means no contact, 1 means a single point, 2 means between 2 edges.

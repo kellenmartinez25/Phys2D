@@ -4,6 +4,10 @@
 #include "DebugTools.h"
 #include <limits>
 
+void resolveFrictionPoint(Manifold& m, ContactPoint& cp);
+void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt);
+void resolveContactSurfaceManifold(Manifold& m, double dt);
+
 inline glm::dvec2 getPointVelocity(PhysObject& obj, glm::dvec2 r) {
 	return obj.velocity + Cross(obj.angularVelocity, r);
 }
@@ -15,9 +19,6 @@ double vBias(double penetration) {
 }
 
 void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
-
-
-
 	auto vA = getPointVelocity(*m.A, cp.rA);
 	auto vB = getPointVelocity(*m.B, cp.rB);
 	// relative velocity, from A (ref) to B (inc)
@@ -60,11 +61,6 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 	double jFinal = newImpulse - oldImpulse;
 	glm::dvec2 J = jFinal * m.normal;
 	applyImpulse(*m.A, *m.B, cp, J);
-	double vnAfter = glm::dot(
-		(m.B->velocity + Cross(m.B->angularVelocity, cp.rB)) -
-		(m.A->velocity + Cross(m.A->angularVelocity, cp.rA)),
-		m.normal);
-	double vansdf = vnAfter + 1.0;
 }
 
 // try to resolve a contact surface's impulses using rigid body constrait solving
@@ -200,7 +196,7 @@ void resolveContactSurfaceManifold(Manifold& m, double dt) {
 	double delta_I1 = new1 - old1;
 	// update our accumulated impulses, for usage by the next iteration and prestep
 	c0.normImpulse = new0;
-	c0.normImpulse = new1;
+	c1.normImpulse = new1;
 	
 	// we can calculate our J vectors
 	glm::dvec2 J0 = delta_I0 * n;
@@ -211,6 +207,36 @@ void resolveContactSurfaceManifold(Manifold& m, double dt) {
 	applyImpulse(A, B, c1, J1);
 
 
+}
+
+
+// solves the friction step on a single-point contact (and manifold)
+void resolveFrictionPoint(Manifold& m, ContactPoint& cp) {
+	// helper vars
+	PhysObject& A = *m.A;
+	PhysObject& B = *m.B;
+	glm::dvec2& n = m.normal;
+	glm::dvec2 t = glm::dvec2(-n.y, n.x); // normal-tangent
+
+	glm::dvec2 vA = getPointVelocity(A, cp.rA);
+	glm::dvec2 vB = getPointVelocity(B, cp.rB);
+	glm::dvec2 vRel = vB - vA;
+
+	double vt = glm::dot(vRel, t);
+	double jt = -vt * cp.tangentEffectiveMass;
+	
+	// friction coefficient
+	const double mu = 0.1;
+	double maxFriction = mu * cp.normImpulse;
+	double oldTanImpulse = cp.tangentImpulse;
+
+	cp.tangentImpulse =
+		glm::clamp(oldTanImpulse + jt,
+			-maxFriction,
+			maxFriction);
+	double jTangentFinal = cp.tangentImpulse - oldTanImpulse;
+	glm::dvec2 frictionImpulse = jTangentFinal * t;
+	applyImpulse(A, B, cp, frictionImpulse);
 }
 
 // Resolve two clipping bodies in a Manifold using Baumgarte stabilization
@@ -237,10 +263,15 @@ void correctPos(Manifold& manifold) {
 
  void collide2D(Manifold& manifold, double dt) {
 	// we choose which method we use to solve our manifold based on its dimension
-	if (manifold.count == 2)
-		resolveContactSurfaceManifold(manifold, dt);
-	else
-		resolveContactPoint(manifold, manifold.points[0], dt);
+	 if (manifold.count == 2) {
+		 resolveContactSurfaceManifold(manifold, dt);
+		 resolveFrictionPoint(manifold, manifold.points[0]);
+		 resolveFrictionPoint(manifold, manifold.points[1]);
+	 }
+	 else {
+		 resolveContactPoint(manifold, manifold.points[0], dt);
+		 resolveFrictionPoint(manifold, manifold.points[0]);
+	 }
 }
 
 void applyImpulse(PhysObject& A, PhysObject& B, ContactPoint& point,  glm::dvec2 J) {
@@ -256,7 +287,7 @@ void preStep(Manifold& manifold) {
 	for (int i = 0; i < manifold.count; i++) {
 		auto& cp = manifold.points[i];
 
-		// recalc rA and rB
+		// calc rA and rB
 		cp.rA = cp.pos - manifold.A->center();
 		cp.rB = cp.pos - manifold.B->center();
 
@@ -273,7 +304,26 @@ void preStep(Manifold& manifold) {
 		// also check for any div by 0 cases
 		cp.effectiveMass = (K > 0.0) ? (1.0 / K) : 0.0;
 
-		glm::dvec2 J = cp.normImpulse * manifold.normal;
+		// tangent / friction
+		glm::dvec2 tangent = glm::dvec2(-manifold.normal.y, manifold.normal.x);
+		double rAxT = Cross(cp.rA, tangent);
+		double rBxT = Cross(cp.rB, tangent);
+		// tangent K
+		double K_Tangent =
+			manifold.A->invMass +
+			manifold.B->invMass +
+			rAxT * rAxT * manifold.A->invInertia +
+			rBxT * rBxT * manifold.B->invInertia;
+		cp.tangentEffectiveMass = (K_Tangent > 0.0) ? (1.0 / K_Tangent) : 0.0;
+		if (manifold.count == 1) {
+			cp.normImpulse = 0.0;
+			cp.tangentImpulse = 0.0;
+			continue;
+		}
+		// calculate pre-step Impulse from normal and tangent
+		glm::dvec2 J =
+			cp.normImpulse * manifold.normal +
+			cp.tangentImpulse * tangent;
 
 		applyImpulse(*manifold.A, *manifold.B, cp, J);
 	}

@@ -139,22 +139,24 @@ int main()
 void placeObjects() {
 	ENGINE.addObject(
 		new PhysObject(
-			glm::dvec2(4.0, 5.0),
+			glm::dvec2(3.0, 5),
 			glm::dvec2(1.0, 1.0),
 			1.0f,
 			glm::radians(0.0f),
-			glm::dvec2(0, -3.0)
+			glm::dvec2(0, 0.0)
 		)
 	);
+	
+
 	ENGINE.addObject(
 		new PhysObject(
-			glm::dvec2(4.0, 3.0),
-			glm::dvec2(3.0, 1.0),
-			3.0f,
-			glm::radians(0.0f),
-			glm::dvec2(0.0, 0.0)
+			glm::dvec2(1, 3),
+			glm::dvec2(4.0, 0.2),
+			glm::radians(30.0),
+			true
 		)
 	);
+	
 
 	PhysObject borders[] = {
 		PhysObject(
