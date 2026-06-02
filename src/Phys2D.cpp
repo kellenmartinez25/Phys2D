@@ -74,8 +74,6 @@ int main()
 	Renderer* renderer = new Renderer(
 		ResourceManager::getShader("shader")
 	);
-	// load test texture
-	ResourceManager::loadTexture("resources/image.jpg", false, "image");
 	
 	DebugDraw::get().init();
 	ResourceManager::getShader("debugShader").use().setMat4("projection", projection);

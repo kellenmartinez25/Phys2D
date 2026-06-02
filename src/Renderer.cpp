@@ -8,24 +8,22 @@ Renderer::Renderer(Shader &Shader) {
 Renderer::~Renderer() {
 	glDeleteVertexArrays(1, &VAO);
 }
-// the texture of a blank white pixel
-// its not garunteed that OpenGL will be loaded yet so it is an optional
-std::optional<Texture2D> BLANK_WHITE;
+
 void Renderer::initRenderData()
 {
 	GLuint VBO;	// buffer
 	// we're just using a rectangle for now
 	float vertices[] = {
 		// Bottom-left triangle
-		// Pos			// Texture
-		0.0f, 1.0f,		0.0f, 1.0f,		// Top Left			|*		(0, 0)
-		1.0f, 0.0f,		1.0f, 0.0f,		// Bottom Right		|  *	(1, 1)
-		0.0f, 0.0f,		0.0f, 0.0f,		// Bottom Left		|____*	
+		// Pos			
+		0.0f, 1.0f,		// Top Left			|*		(0, 0)
+		1.0f, 0.0f,		// Bottom Right		|  *	(1, 1)
+		0.0f, 0.0f,		// Bottom Left		|____*	
 		// Top Right Triangle
-		// Pos			// Texture							_____
-		0.0f, 1.0f,		0.0f, 1.0f,		// Top Left			*    |
-		1.0f, 1.0f,		1.0f, 1.0f,		// Top Right		  *  |
-		1.0f, 0.0f,		1.0f, 0.0f		// Bottom Right		    *|
+		// Pos								_____
+		0.0f, 1.0f,		// Top Left			*    |
+		1.0f, 1.0f,		// Top Right		  *  |
+		1.0f, 0.0f,		// Bottom Right		    *|
 	};
 	// do the generating objs
 	glGenVertexArrays(1, &this->VAO);
@@ -38,18 +36,15 @@ void Renderer::initRenderData()
 	glBindVertexArray(this->VAO);
 	// this will be in location 0
 	glEnableVertexAttribArray(0);
-	// configure our VAO with our vertex array, made up of a series of vec4s
-	// x and y are positions, z & w are texture coordinates
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	// configure our VAO with our vertex array, made up of a series of vec2s
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	// unbind buffers
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-	// are we doing a blank white rectangle?
-	BLANK_WHITE = Texture2D(true);
 
 }
-// draw sprite to screen using a provided texture
-void Renderer::drawSprite(Texture2D& texture, glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color)
+// draw box to screen with color
+void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color)
 {
 	// activate shader
 	this->shader.use();
@@ -68,17 +63,10 @@ void Renderer::drawSprite(Texture2D& texture, glm::dvec2 pos, glm::dvec2 size, f
 	shader.setMat4("model", model);
 	// and color too
 	shader.setVec3f("spriteColor", color);
-	// activate/bind texture
-	glActiveTexture(GL_TEXTURE0);
-	texture.bind();
+
 	// bind VAO
 	glBindVertexArray(this->VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	// we're only using 1 VAO for now so no need to unbind it
 	//glBindVertexArray(0);
-}
-// Draw a solid color rectangle
-void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color)
-{
-	drawSprite(BLANK_WHITE.value(), pos, size, rotate, color);
 }

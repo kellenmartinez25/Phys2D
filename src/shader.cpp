@@ -1,5 +1,9 @@
 #include "shader.h"
-
+#include <glm/gtc/type_ptr.hpp>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <vector>
 // compile shader with vertex, frag, and (optional) geo shader
 // takes in the entire source code as a string
 void Shader::Compile(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* geometryShaderSrc)
