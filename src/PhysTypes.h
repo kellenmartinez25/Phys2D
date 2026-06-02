@@ -13,9 +13,9 @@ struct ContactPoint {
 	// amount of penetration
 	double penetration;
 	// used for impulse calculation
-	double effectiveMass;
+	double impulseDenominator;
 	// for friction
-	double tangentEffectiveMass;
+	double tangentImpulseDenominator;
 	// The impulse calculated on the previous solve
 	double normImpulse = 0.0;
 	double tangentImpulse = 0.0;
