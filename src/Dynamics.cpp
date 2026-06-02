@@ -22,19 +22,15 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 	auto vA = getPointVelocity(*m.A, cp.rA);
 	auto vB = getPointVelocity(*m.B, cp.rB);
 	// relative velocity, from A (ref) to B (inc)
-	auto vRel = vB - vA;
+	glm::dvec2 vRel = vB - vA;
 	// relative velocity along the collision normal
-	//auto vRelNorm = glm::dot(vRel, m.normal);
-
-	double vRelNorm = glm::dot(m.B->velocity - m.A->velocity, m.normal)
-		+ glm::dot(Cross(m.B->angularVelocity, cp.rB), m.normal)
-		- glm::dot(Cross(m.A->angularVelocity, cp.rA), m.normal);
+	double vRelNorm = glm::dot(vRel, m.normal);
 
 	// sleepy
 	if (fabs(vRelNorm) < 0.02 && cp.penetration < 0.02)
 		vRelNorm = 0.0;
 	// stabilize the resulting impulse
-	const double beta = 0.05, slop = 0.02, maxBias = 0.2;
+	const double beta = 0.05, slop = 0.02, maxBias = 0.2; 
 	double bias = beta * std::max(cp.penetration - slop, 0.0) / dt;
 	bias = std::min(bias, maxBias);
 
@@ -44,13 +40,9 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 		return;
 
 	double k = cp.effectiveMass > 0.0 ? (1.0 / cp.effectiveMass) : 0.0;
-	// coeff of restitution
-	double e = 0.0;
-	//if (vRelNorm < -1.0)
-		//e = 0.5;
-	double bouncy = -e * vRelNorm;
-	double v_target = bias + bouncy;
-	double j = (v_target - vRelNorm) * cp.effectiveMass;
+
+	double v_target = bias;
+	double j = (v_target - vRelNorm) * k;
 	// accurate impulse solver by getting the *change* in old->new impulse from our manifold
 	double oldImpulse = cp.normImpulse;
 	// get the accumulated normal impulse
@@ -320,7 +312,7 @@ void preStep(Manifold& manifold) {
 			cp.tangentImpulse = 0.0;
 			continue;
 		}
-		// calculate pre-step Impulse from normal and tangent
+		// calculate warm start Impulse from normal and tangent
 		glm::dvec2 J =
 			cp.normImpulse * manifold.normal +
 			cp.tangentImpulse * tangent;

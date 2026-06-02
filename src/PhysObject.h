@@ -18,8 +18,6 @@ public:
 	glm::dvec2 velocity;
 	/// RGB Color
 	glm::vec3 color;
-	int collisionState = false;
-	int collisionChecked2 = false;
 	/// Force vector. Directions are same as pos vector.
 	glm::dvec2 force;
 	/// Mass of entire object.
