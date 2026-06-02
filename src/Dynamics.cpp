@@ -37,8 +37,6 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 	// meaning that we shouldnt resolve anything in this case.
 	if (vRelNorm > 0.0 && cp.penetration <= slop)
 		return;
-	// get K value
-	double k = cp.impulseDenominator > 0.0 ? (1.0 / cp.impulseDenominator) : 0.0;
 	// target correctional velocity
 	double v_target = bias;
 	// impulse magnitude
@@ -46,7 +44,7 @@ void resolveContactPoint(Manifold& m, ContactPoint& cp, double dt) {
 	// direction where objects are moving inside each other
 	// we also put in a v_target here, because in cases were vRelNorm is low and yet they're penetrating deeply,
 	// we still need to apply a correctional impulse
-	double j = (v_target - vRelNorm) * k;
+	double j = (v_target - vRelNorm) * cp.impulseDenominator;
 	// get the previous iteration's normal impulse
 	double oldImpulse = cp.normImpulse;
 	// the accumulated normal impulse. we clamp it to > 0.0, because impulses shouldnt be negative (never pull them together)
