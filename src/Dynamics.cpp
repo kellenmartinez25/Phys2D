@@ -258,22 +258,28 @@ void resolveFrictionPoint(Manifold& m, ContactPoint& cp) {
 
 // Resolve two clipping bodies in a Manifold using Baumgarte stabilization
 void correctPos(Manifold& manifold) {
+	// stabilization bias consts
 	const double slop = 0.02;
-	const double percent = (manifold.count == 1) ? 0.05 : 0.10;
+	// use lower scale for single contacts due to them being less stable, overcorrection could cause bouncy
+	double percent = (manifold.count == 1) ? 0.05 : 0.10;
 	
-	// find the contact point with maximum penetration; this is the one we will be correcting from
+	// find the contact point with maximum penetration; this is the one to use to calc the bias
 	double maxPenetration = 0.0;
 	for (int i = 0; i < manifold.count; i++) {
 		maxPenetration = std::max(maxPenetration, manifold.points[i].penetration);
 	}
-	double correctMag = std::max(maxPenetration - slop, 0.0) * percent;
-	glm::dvec2 correction = correctMag * manifold.normal;
+	// calc the correction amount
+	double correctionMag = std::max(maxPenetration - slop, 0.0) * percent;
+	// we correct the position along the contact normal
+	glm::dvec2 correction = correctionMag * manifold.normal;
+	// sum of m^-1 across both bodies
 	double totalInvMass = manifold.A->invMass + manifold.B->invMass;
 
 	// total m^-1 might be 0.0 if both objects are static
 	if (totalInvMass == 0.0)
 		return;
 	// apply to both objects
+	// static objects have an invMass=0.0; dont worry they wont move during correction
 	manifold.A->pos -= correction * (manifold.A->invMass / totalInvMass);
 	manifold.B->pos += correction * (manifold.B->invMass / totalInvMass);
 }
