@@ -8,9 +8,9 @@
 std::map<std::string, Shader> ResourceManager::Shaders;
 
 // load shader from the filenames of vert/frag/optional geo. name will be used to identify and manage your created shader program
-Shader ResourceManager::loadShader(const char* vertexShaderPath, const char* fragmentShaderPath, const char* geometryShaderPath, std::string name)
+Shader ResourceManager::loadShader(const char* vertexShaderPath, const char* fragmentShaderPath, std::string name)
 {
-	Shaders[name] = loadShaderFromFile(vertexShaderPath, fragmentShaderPath, geometryShaderPath);
+	Shaders[name] = loadShaderFromFile(vertexShaderPath, fragmentShaderPath);
 	return Shaders[name];
 }
 // get shader object from name
@@ -56,20 +56,16 @@ std::string ResourceManager::loadTextFileFromPath(const char* path, const char* 
 	return fileString;
 }
 // internal method, creates a new shader object using provided source files
-Shader ResourceManager::loadShaderFromFile(const char* vertexShaderPath, const char* fragmentShaderPath, const char* geometryShaderPath)
+Shader ResourceManager::loadShaderFromFile(const char* vertexShaderPath, const char* fragmentShaderPath)
 {
-	std::string vertShaderCode, fragShaderCode, geometryShaderCode;
+	std::string vertShaderCode, fragShaderCode;
 	// load shader source code files
 	vertShaderCode = loadTextFileFromPath(vertexShaderPath, SHADER_PREFIX);
 	fragShaderCode = loadTextFileFromPath(fragmentShaderPath, SHADER_PREFIX);
-	const char* geometryShaderCodeCS;
-	if (geometryShaderPath != nullptr) {
-		geometryShaderCode = loadTextFileFromPath(geometryShaderPath, SHADER_PREFIX);
-		geometryShaderCodeCS = geometryShaderCode.c_str();
-	}
+
 	// create shader object from source
 	Shader shader;
 	// compile them
-	shader.Compile(vertShaderCode.c_str(), fragShaderCode.c_str(), geometryShaderPath != nullptr ? geometryShaderCodeCS : nullptr);
+	shader.Compile(vertShaderCode.c_str(), fragShaderCode.c_str());
 	return shader;
 }

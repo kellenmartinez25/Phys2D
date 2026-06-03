@@ -53,7 +53,7 @@ void DebugDraw::init() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(DebugVertex), (void*)(sizeof(glm::vec2)));
 
-	this->shader = ResourceManager::loadShader("debugShader.vert", "debugShader.frag", nullptr, "debugShader");
+	this->shader = ResourceManager::loadShader("debugShader.vert", "debugShader.frag", "debugShader");
 	
 
 

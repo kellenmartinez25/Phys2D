@@ -67,7 +67,7 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//load shaders
-	ResourceManager::loadShader("vertShader.vert", "fragShader.frag", nullptr, "shader");
+	ResourceManager::loadShader("vertShader.vert", "fragShader.frag", "shader");
 	
 	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT), -1.0f, 1.0f);
 	ResourceManager::getShader("shader").use().setMat4("projection", projection);
@@ -225,8 +225,19 @@ void handleMouseButton(GLFWwindow* win, int button, int action, int mods) {
 }
 
 void handleScrollWheel(GLFWwindow* win, double dx, double dy) {
-	std::cout << dy << std::endl;
-	queuedObj.angle += dy * glm::radians(15.0);
+	bool shift = glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
+	bool ctrl = glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+	if (shift || ctrl) {
+		if (shift) {
+			queuedObj.size.x = std::max(queuedObj.size.x + dy * .1, .1);
+		}
+		else if (ctrl) {
+			queuedObj.size.y = std::max(queuedObj.size.y + dy * .1, .1);
+		}
+	}
+	else {
+		queuedObj.angle += dy * glm::radians(15.0);
+	}
 	updateSelectedObject(win);
 }
 
