@@ -31,26 +31,7 @@ void Engine::reset() {
 	objects.clear();
 	manifoldCache.clear();
 }
-// make sure an object doesnt go off screen bounds
-void Engine::pushIntoScreenBounds(PhysObject& obj) {
-	// also keep within screen boundaries
-	if (obj.pos.y + obj.size.y > HEIGHT) {
-		obj.pos.y = HEIGHT - obj.size.y;
-		obj.velocity.y *= -1.0f;
-	}
-	else if (obj.pos.y <= 0.0f) {
-		obj.pos.y = 0.0f;
-		obj.velocity.y *= -1.0f;
-	}
-	if (obj.pos.x + obj.size.x > WIDTH) {
-		obj.pos.x = WIDTH - obj.size.x;
-		obj.velocity.x *= -1.0f;
-	}
-	else if (obj.pos.x < 0.0f) {
-		obj.pos.x = 0.0f;
-		obj.velocity.x *= -1.0f;
-	}
-}
+
 
 
 // update positions and velocities
@@ -146,11 +127,14 @@ void Engine::updateSim(double dt) {
 	}
 
 	// update each object with new values
-	for (auto& obj : objects) {
+	for (int i = 0; i < objects.size(); i++) {
+		PhysObject& obj = objects[i];
 		obj.update(dt);
-		// push the object into the bounds of the display
-		pushIntoScreenBounds(obj);
 		obj.render(renderer);
+		if (obj.center().y < -100.0) {
+			// delete object if it falls out of world
+			objects.erase(objects.begin() + i);
+		}
 	}
 
 	// debug drawing
