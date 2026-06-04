@@ -209,17 +209,29 @@ void handleMouseCursor(GLFWwindow* win, double x, double y) {
 }
 void handleMouseButton(GLFWwindow* win, int button, int action, int mods) {
 	if (action == GLFW_PRESS) {
-		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+		if (button == GLFW_MOUSE_BUTTON_1) {
 			// we clicked mouse1; add the preview object to the engine
 			// copy it to a new one
+			updateSelectedObject(win);
 			PhysObject* toAdd = new PhysObject();
 			toAdd->pos = queuedObj.pos;
 			toAdd->size = queuedObj.size;
 			toAdd->angle = queuedObj.angle;
+			toAdd->mass = queuedObj.mass;
+			toAdd->calcInverses();
 			ENGINE.addObject(toAdd);
 		}
-		// rotation controls for object
-
+		// right click to add a static object
+		if (button == GLFW_MOUSE_BUTTON_2) {
+			// we clicked mouse2; add the object as a static
+			PhysObject* toAdd = new PhysObject();
+			toAdd->pos = queuedObj.pos;
+			toAdd->size = queuedObj.size;
+			toAdd->angle = queuedObj.angle;
+			toAdd->isStatic = true;
+			toAdd->calcInverses();
+			ENGINE.addObject(toAdd);
+		}
 	}
 	
 }
@@ -228,10 +240,11 @@ void handleScrollWheel(GLFWwindow* win, double dx, double dy) {
 	bool shift = glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS;
 	bool ctrl = glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 	if (shift || ctrl) {
+		// 2 statements to let you press both to scale in both directions
 		if (shift) {
 			queuedObj.size.x = std::max(queuedObj.size.x + dy * .1, .1);
 		}
-		else if (ctrl) {
+		if (ctrl) {
 			queuedObj.size.y = std::max(queuedObj.size.y + dy * .1, .1);
 		}
 	}
