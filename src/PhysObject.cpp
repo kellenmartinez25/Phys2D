@@ -1,5 +1,7 @@
 #include "PhysObject.h"
 #include <limits>
+#include <vector>
+
 #define SCALE 100.0
 constexpr double ALPHA_DECAY = 0.01;
 
@@ -108,13 +110,6 @@ std::vector<glm::dvec2> PhysObject::getVertices() const {
 	model = glm::rotate(model, static_cast<float>(angle), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::scale(model, glm::vec3(size, 1.0f));
 	
-
-	/*model = glm::translate(model, glm::vec3(pos, 0.0f));
-	model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
-	model = glm::rotate(model, -glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
-	model = glm::scale(model, glm::vec3(size, 1.0f));*/
-
 	// the base vertex matrix that we will put in
 	std::vector<glm::dvec2> vertices = {
 		glm::dvec2(-0.5f, -0.5f),	// BL

@@ -1,11 +1,6 @@
 #pragma once
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <vector>
-#include <utility>
 #include <unordered_map>
 #include "PhysTypes.h"
 #include "PhysObject.h"
@@ -41,7 +36,6 @@ public:
 	std::vector<PhysObject> objects;
 
 private:
-	void pushIntoScreenBounds(PhysObject& obj);
 	std::unordered_map<PhysObjectPair, Manifold, PairHash> manifoldCache;
 };
 
