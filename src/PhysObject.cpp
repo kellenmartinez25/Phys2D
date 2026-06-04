@@ -42,7 +42,7 @@ PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double mass, double rota
 }
 
 PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double rotation, bool isStatic) :
-	PhysObject(pos, size, std::numeric_limits<double>::max(), rotation)
+	PhysObject(pos, size, size.x*size.y, rotation)
 {
 	this->isStatic = isStatic;
 	calcInverses();
@@ -87,8 +87,9 @@ void PhysObject::update(double dt) {
 	// angle position is updated from w
 	angle += dt * angularVelocity;
 
-	// decay
-	angularVelocity *= 0.995;
+	// only decay if non-static
+	if (!isStatic)
+		angularVelocity *= 0.995;
 		
 }
 // use a provided renderer object to draw the PhysObject
