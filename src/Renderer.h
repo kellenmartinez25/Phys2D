@@ -20,7 +20,8 @@ public:
 	void drawSprite(glm::dvec2 pos,
 		glm::dvec2 size = glm::dvec2(10.0f, 10.0f),
 		float rotate = 0.0f,
-		glm::vec3 color = glm::vec3(1.0f));
+		glm::vec3 color = glm::vec3(1.0f),
+		bool drawBorder = true);
 	void initRenderData();
 private:
 	Shader shader;

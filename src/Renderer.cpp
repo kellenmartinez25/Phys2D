@@ -44,7 +44,7 @@ void Renderer::initRenderData()
 
 }
 // draw box to screen with color
-void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color)
+void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color, bool drawBorder)
 {
 	// activate shader
 	this->shader.use();
@@ -63,6 +63,10 @@ void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::ve
 	shader.setMat4("model", model);
 	// and color too
 	shader.setVec3f("spriteColor", color);
+	// push size for border rendering
+	shader.setVec2f("size", size);
+	// toggle border
+	shader.setInt("drawBorder", drawBorder);
 
 	// bind VAO
 	glBindVertexArray(this->VAO);

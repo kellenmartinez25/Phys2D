@@ -68,30 +68,26 @@ void PhysObject::preUpdate(double dt) {
 	if (!isStatic) {
 		// get force vector
 		glm::dvec2 gravity = glm::dvec2(0.0, -9.80);
+		// update velocity from force:
+		// F = m * a -> a = F/m
+		// v1 = v0 + a * dt -> v1 = v0 + (F/m) * dt
 		velocity += dt * gravity;
 	}
 }
 
 // update position via small timestep, using eulers method (i think)
 void PhysObject::update(double dt) {
-	if (!isStatic) {
-		// get force vector
-		force = glm::dvec2(0.0, -100.0);
-		// update velocity from force:
-		// F = m * a -> a = F/m
-		// v1 = v0 + a * dt -> v1 = v0 + (F/m) * dt
-		//velocity += (dt * (1.0 / mass)) * force;
-		// update our position from velocity & timestep
-		pos += dt * velocity;
-		// Update angular velocity too, from ang accel
-		angularVelocity += dt * angAccleration;
-		// angle position is updated from w
-		angle += dt * angularVelocity;
+	//velocity += (dt * (1.0 / mass)) * force;
+	// update our position from velocity & timestep
+	pos += dt * velocity;
+	// Update angular velocity too, from ang accel
+	angularVelocity += dt * angAccleration;
+	// angle position is updated from w
+	angle += dt * angularVelocity;
 
-		// decay
-		angularVelocity *= 0.995;
+	// decay
+	angularVelocity *= 0.995;
 		
-	}
 }
 // use a provided renderer object to draw the PhysObject
 void PhysObject::render(Renderer* renderer) const {
@@ -99,7 +95,8 @@ void PhysObject::render(Renderer* renderer) const {
 		pos*SCALE,
 		size*SCALE,
 		glm::degrees(angle),
-		color
+		color,
+		isStatic
 	);
 }
 // Get the positions of each vertex on the box
