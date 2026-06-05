@@ -12,10 +12,9 @@ void main()
 		pos.x >= 1.0 - thickness.x ||
 		pos.y <= thickness.y ||
 		pos.y >= 1.0 - thickness.y;
-	border = border || drawBorder;
+	border = border || !drawBorder;
 	if (border)
 		FragColor = vec4(spriteColor, 1.0);
 	else
 		discard;
-	//FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
