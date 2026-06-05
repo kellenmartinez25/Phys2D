@@ -48,6 +48,12 @@ PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double rotation, bool is
 	calcInverses();
 }
 
+PhysObject::PhysObject(glm::dvec2 pos, glm::dvec2 size, double rotation, glm::dvec2 velocity) :
+	PhysObject(pos, size, size.x* size.y, rotation, velocity)
+{
+	calcInverses();
+}
+
 // set the inverse mass / inertia
 void PhysObject::calcInverses() {
 
@@ -64,7 +70,7 @@ void PhysObject::init(glm::dvec2 pos, glm::dvec2 size, glm::dvec2 velocity, glm:
 	this->pos = pos;
 	this->size = size;
 	this->velocity = velocity;
-	this->angle = 0.0f;
+	this->angle = 0.0;
 }
 void PhysObject::preUpdate(double dt) {
 	if (!isStatic) {
@@ -99,7 +105,7 @@ void PhysObject::render(Renderer* renderer) const {
 		size*SCALE,
 		glm::degrees(angle),
 		color,
-		isStatic
+		!isStatic
 	);
 }
 // Get the positions of each vertex on the box

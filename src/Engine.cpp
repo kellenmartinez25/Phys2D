@@ -8,8 +8,6 @@
 Engine::Engine(GLFWwindow* win, Renderer* renderer) :
 	WIDTH(8),
 	HEIGHT(6),
-	view_x(800),
-	view_y(600),
 	renderer(renderer),
 	window(win),
 	objects(1)
@@ -18,9 +16,7 @@ Engine::Engine(GLFWwindow* win, Renderer* renderer) :
 }
 Engine::Engine() :
 	WIDTH(8),
-	HEIGHT(6),
-	view_x(800),
-	view_y(600)
+	HEIGHT(6)
 {}
 // add a physobject to the simulation
 void Engine::addObject(PhysObject* obj)
@@ -138,12 +134,14 @@ void Engine::updateSim(double dt) {
 	}
 
 	// debug drawing
-	for (auto& m : manifolds) {
-		for (int i = 0; i < m.count; i++) {
-			DebugDraw::get().drawPoint(
-				m.points[i].pos,
-				glm::vec3(1.0f, 0.0f, 0.0f)
-			);
+	if (showContacts) {
+		for (auto& m : manifolds) {
+			for (int i = 0; i < m.count; i++) {
+				DebugDraw::get().drawPoint(
+					m.points[i].pos,
+					glm::vec3(1.0f, 0.0f, 0.0f)
+				);
+			}
 		}
 	}
 	

@@ -1,5 +1,4 @@
 #include "Renderer.h"
-#include <optional>
 Renderer::Renderer(Shader &Shader) {
 	this->shader = Shader;
 	initRenderData();
@@ -11,7 +10,6 @@ Renderer::~Renderer() {
 
 void Renderer::initRenderData()
 {
-	GLuint VBO;	// buffer
 	// we're just using a rectangle for now
 	float vertices[] = {
 		// Bottom-left triangle
@@ -27,6 +25,7 @@ void Renderer::initRenderData()
 	};
 	// do the generating objs
 	glGenVertexArrays(1, &this->VAO);
+	GLuint VBO;	// buffer
 	glGenBuffers(1, &VBO);
 	// bind vbo
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -44,7 +43,7 @@ void Renderer::initRenderData()
 
 }
 // draw box to screen with color
-void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::vec3 color, bool drawBorder)
+void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, double rotate, glm::vec3 color, bool drawBorder)
 {
 	// activate shader
 	this->shader.use();
@@ -55,7 +54,7 @@ void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::ve
 
 	// move rectangle to its center before rotating, then move it back to the corner
 	model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f));
-	model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, static_cast<float>(glm::radians(rotate)), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
 	// scaling
 	model = glm::scale(model, glm::vec3(size, 1.0f));
@@ -64,7 +63,7 @@ void Renderer::drawSprite(glm::dvec2 pos, glm::dvec2 size, float rotate, glm::ve
 	// and color too
 	shader.setVec3f("spriteColor", color);
 	// push size for border rendering
-	shader.setVec2f("size", size);
+	shader.setVec2f("size", glm::vec2(size));
 	// toggle border
 	shader.setInt("drawBorder", drawBorder);
 

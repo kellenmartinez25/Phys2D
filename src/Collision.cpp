@@ -159,7 +159,7 @@ std::optional<MTV> getMTV(PhysObject& obj1, PhysObject& obj2) {
 Edge bestEdge(const PhysObject& obj1, const Axis& sepNormal) {
 	std::vector<glm::dvec2> obj1Verts = obj1.getVertices();
 
-	int c = obj1Verts.size();
+	size_t c = obj1Verts.size();
 	int index = 0;
 	double max = glm::dot(sepNormal, obj1Verts[0]);
 	for (int i = 0; i < c; i++) {

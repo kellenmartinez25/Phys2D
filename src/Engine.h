@@ -24,10 +24,9 @@ public:
 	GLFWwindow* window;
 	int WIDTH;
 	int HEIGHT;
-	float view_x;
-	float view_y;
 	Renderer* renderer;
 	glm::dvec2 gravityField = glm::dvec2(0.0f, 10.0f);
+	bool showContacts = false;
 	Engine(GLFWwindow* win, Renderer* renderer);
 	Engine();
 	// Reset the engine and remove all objects
