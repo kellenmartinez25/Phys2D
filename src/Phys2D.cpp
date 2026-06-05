@@ -18,6 +18,23 @@ void handleMouseCursor(GLFWwindow* win, double x, double y);
 void handleMouseButton(GLFWwindow* win, int button, int action, int mods);
 void handleScrollWheel(GLFWwindow* win, double dx, double dy);
 void updateSelectedObject(GLFWwindow* win);
+
+// This is a type of function which accepts an Engine object and places objects inside them,
+// for re-usable scenarios.
+typedef void (*ScenarioFunc)(Engine* engine);
+
+#define SCEN(n, g) scenario##n(g)
+#define SCENSET(n) extern void scenario##n(Engine* engine)
+
+// declare scenarios
+extern void scenario0(Engine* engine);
+extern void scenario1(Engine* engine);
+extern void scenario2(Engine* engine);
+extern void scenario3(Engine* engine);
+
+int scenarioSelect = 0;
+const int MAX_SCENARIOS = 3;
+
 void placeObjects();
 
 // engine object
@@ -74,8 +91,9 @@ int main()
 	Renderer* renderer = new Renderer(
 		ResourceManager::getShader("shader")
 	);
-	
+	// initialize the debug drawing
 	DebugDraw::get().init();
+	// set our projection matrix onto the debug tool draw
 	ResourceManager::getShader("debugShader").use().setMat4("projection", projection);
 
 	//float dt = 0.0f;
@@ -98,18 +116,6 @@ int main()
 	constexpr float vScale = 200.0f;
 
 	placeObjects();
-	//for (int i = 0; i < nBoxes; i++) {
-	//	// random x/y things
-	//	float vx = rand(gen);
-	//	float vy = rand(gen);
-	//	// add new object
-	//	ENGINE.addObject(new PhysObject(
-	//		glm::dvec2(float(i) * d, 200.0f),	// evenly spaced
-	//		glm::dvec2(100.0f + vx * 50.0f, 100.0f + vy * 50.0f),	// varying size
-	//		((100.0f + vx * 50.0f) * (100.0f + vy * 50.0f)) / 10000.0f,
-	//		glm::dvec2(vx*vScale, glm::abs(vy) * 10.0f)	// varying velocity
-	//	));
-	//}
 	// engine loop
 
 	double dt;
@@ -149,28 +155,19 @@ int main()
 	return 0;
 }
 void placeObjects() {
-	ENGINE.addObject(
-		new PhysObject(
-			glm::dvec2(3.0, 2),
-			glm::dvec2(1.0, 1.0),
-			1.0f,
-			glm::radians(30.0f),
-			glm::dvec2(0, 0.0)
-		)
-	);
-
-
-	
-
-	PhysObject borders[] = {
-		PhysObject(
-			glm::dvec2(0.0, 0.0),
-			glm::dvec2(8.0, 1.0),
-			0.0,
-			true)
-	};
-	for (PhysObject& obj : borders) {
-		ENGINE.addObject(&obj);
+	switch (scenarioSelect) {
+	default:
+	case 0:
+		scenario0(&ENGINE);
+		break;
+	case 1:
+		scenario1(&ENGINE);
+		break;
+	case 2:
+		scenario2(&ENGINE);
+		break;
+	case 3:
+		scenario3(&ENGINE);
 	}
 }
 void error_callback(int err, const char* desc)
@@ -197,6 +194,23 @@ void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods) 
 		}
 		if (key == GLFW_KEY_MINUS) {
 			queuedObj.size *= 0.9;
+		}
+		if (key == GLFW_KEY_LEFT) {
+			if (scenarioSelect > 0) {
+				scenarioSelect--;
+				ENGINE.reset();
+				placeObjects();
+			}
+		}
+		if (key == GLFW_KEY_RIGHT) {
+			if (scenarioSelect < MAX_SCENARIOS) {
+				scenarioSelect++;
+				ENGINE.reset();
+				placeObjects();
+			}
+		}
+		if (key == GLFW_KEY_G) {
+			ENGINE.showContacts = !ENGINE.showContacts;
 		}
 	}
 
