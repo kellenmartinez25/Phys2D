@@ -32,7 +32,6 @@ void scenario1(Engine* engine) {
 
 // some stacking
 void scenario2(Engine* engine) {
-	std::cout << "ff" << std::endl;
 	floorBorder(engine);
 	engine->addObject(new PhysObject(
 		vec2{ 2.0, 1.0 },
@@ -75,9 +74,9 @@ void scenario3(Engine* engine) {
 		true
 	);
 	PhysObject* bevel = new PhysObject(
-		vec2{ 3.0, 1.5 },
+		vec2{ 3.0, 2.5 },
 		vec2{ 1.0 },
-		radians(45.0),
+		radians(47.0),
 		false
 	);
 
