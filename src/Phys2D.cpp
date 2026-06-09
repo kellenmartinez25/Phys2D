@@ -140,6 +140,8 @@ int main()
 		DebugDraw::get().render();
 		// refresh buffers to what we are currently drawing now
 		glfwSwapBuffers(window);
+		// cap to refresh rate
+		glfwSwapInterval(1);
 		if (f_i == 9) {
 			std::cout << "\rObjects: " << ENGINE.objects.size() << "      FPS: " << totFps / 10.0 << "            " << std::flush;
 		}
