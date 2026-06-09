@@ -8,7 +8,7 @@ inline double mass(glm::dvec2 size) {
 void floorBorder(Engine* engine) {
 	engine->addObject(new PhysObject(
 		glm::dvec2(0.0, 0.0),
-		glm::dvec2(8.0, 1.0),
+		glm::dvec2(16.0, 1.0),
 		0.0,
 		true)
 	);

@@ -76,7 +76,7 @@ int main()
 	GLint majVersion, minVersion;
 	glGetIntegerv(GL_MAJOR_VERSION, &majVersion);
 	glGetIntegerv(GL_MINOR_VERSION, &minVersion);
-	std::cout << "OPENGL VERSION: " << majVersion << " : " << minVersion;
+	std::cout << "OPENGL VERSION: " << majVersion << " : " << minVersion << std::endl;
 
 	// OpenGL config
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -108,14 +108,23 @@ int main()
 	// place the objects for the first time
 	placeObjects();
 
-	// delta time is kinda unpredictable so we dont use it for now
-	//double dt;
-	//double lastFrame = glfwGetTime();
+	// used for frame rate
+	double dt;
+	double lastFrame = glfwGetTime();
+	double totFps = 0.0;
+	double fpsHist[10]{ 0.0 };
+	int f_i = 0;
 	while (!glfwWindowShouldClose(window)) {
-		//float currentFrame = glfwGetTime();
-		//dt = currentFrame - lastFrame;
-		//lastFrame = currentFrame;
-		
+		float currentFrame = glfwGetTime();
+		dt = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		double fps = 1.0 / dt;
+		totFps -= fpsHist[f_i];
+		fpsHist[f_i] = fps;
+		totFps += fps;
+		f_i = (f_i + 1) % 10;
+
+
 		// poll inputs
 		glfwPollEvents();
 		// black bg
@@ -131,6 +140,9 @@ int main()
 		DebugDraw::get().render();
 		// refresh buffers to what we are currently drawing now
 		glfwSwapBuffers(window);
+		if (f_i == 9) {
+			std::cout << "\rObjects: " << ENGINE.objects.size() << "      FPS: " << totFps / 10.0 << "            " << std::flush;
+		}
 	}
 
 	// run these on window close //
